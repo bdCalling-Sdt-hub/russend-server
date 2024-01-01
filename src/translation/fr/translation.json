@@ -1,0 +1,7 @@
+{
+  "registration-exists":"User is already registered",
+  "unauthorised":"User is not authorised",
+  "exception-in-authorization":"Server error, please try again later",
+  "validation-error":"Form validation error"
+  
+}

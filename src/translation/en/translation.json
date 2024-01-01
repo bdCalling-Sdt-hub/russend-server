@@ -1,0 +1,12 @@
+{
+  "user-exists":"User already exists",
+  "registration-exists":"User is already registered",
+  "unauthorised":"User is not authorised",
+  "exception-in-authorization":"Server error, please try again later",
+  "validation-error":"Form validation error",
+  "name-required":"Name is required",
+  "email-format-error":"Email format is invalid",
+  "phoneNumber-required": "Phone number is required",
+  "password-format-error":"Password format is invalid, it must contain at least 8 characters including numbers and characters",
+  "role-required": "Role is required"
+}
