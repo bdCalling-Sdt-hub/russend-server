@@ -18,18 +18,15 @@ const userSchema = new mongoose.Schema({
     }
   },
   phoneNumber: { type: String, required: false, trim: true },
-  password: { type: String, required: [true, 'Password must be given'], set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
+  password: { type: String, required: [true, 'Password must be given'] },
   image: {
     type: Object, required: false, default: {
       publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/user.png`,
       path: 'public\\uploads\\users\\user.png'
     }
   },
-  emailVerified: { type: Boolean, default: false },
   role: { type: String, enum: ['user', 'admin', 'worker'], default: 'user' },
   verificationCode: { type: String, required: false },
-  //isDeleted: { type: Boolean, default: false },
-  status: { type: String, enum: ['accepted', 'banned', 'suspended', 'deleted'], default: 'accepted' },
 }, { timestamps: true }, {
   toJSON: {
     transform(doc, ret) {

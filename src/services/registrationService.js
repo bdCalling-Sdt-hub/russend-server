@@ -25,8 +25,17 @@ const updateRegisteredUserData = async (registrationId, registrationBody) => {
   return existingRegistration;
 }
 
+const deleteUserRegistration = async (registrationId) => {
+  const deletedRegistration = await Registration.findByIdAndDelete(registrationId);
+  if (!deletedRegistration) {
+    throw new Error('Registration not found');
+  }
+  return deletedRegistration;
+}
+
 module.exports = {
   addRegistration,
   getRegisteredUserByEmail,
-  updateRegisteredUserData
+  updateRegisteredUserData,
+  deleteUserRegistration
 }

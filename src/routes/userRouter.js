@@ -1,5 +1,5 @@
 const express = require('express');
-const { signUp, signIn } = require('../controllers/userController');
+const { signUp, verifyEmail, signIn } = require('../controllers/userController');
 const router = express.Router();
 const userFileUploadMiddleware = require("../middlewares/fileUpload");
 
@@ -11,6 +11,7 @@ const  validationMiddleware = require('../middlewares/user/signupValidation');
 //Sign-up user
 router.post('/sign-up',  validationMiddleware, signUp);
 router.post('/sign-in', signIn);
+router.post('/verify-email', verifyEmail);
 
 
 module.exports = router;

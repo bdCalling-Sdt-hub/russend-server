@@ -1,6 +1,28 @@
 {
   "user-exists":"User already exists",
+  "user-not-exists":"User does not exist",
+
   "registration-exists":"User is already registered",
+  "registration-success":"User is registered successfully, please check your email for OTP",
+  "registration-failed":"User registration failed, please try again later",
+  
+  "invalid-otp":"OTP is invalid, please try again",
+  "otp-exists":"OTP is already sent to the email",
+  "otp-sent":"OTP is sent to your email, please check",
+  "otp-expired":"OTP is expired, please try again",
+
+  "user-verified":"User is verified successfully",
+  "forget-password-success":"Password is reset successfully, please check your email for new password",
+  "forget-password-error":"OTP can not sent now, please try again later",
+  "forget-password-failed":"Something went wrong, please try again later",
+  "forget-password-sent":"Password reset OTP is sent to your email, please check",
+
+
+  "login-credentials-required":"Email and password are required",
+  "login-success":"User is logged in successfully",
+  "login-failed":"Email or password is incorrect, please try again later",
+  "login-error":"Server error, please try again later",
+  
   "unauthorised":"User is not authorised",
   "exception-in-authorization":"Server error, please try again later",
   "validation-error":"Form validation error",
@@ -8,5 +30,7 @@
   "email-format-error":"Email format is invalid",
   "phoneNumber-required": "Phone number is required",
   "password-format-error":"Password format is invalid, it must contain at least 8 characters including numbers and characters",
-  "role-required": "Role is required"
+  "role-required": "Role is required",
+  "otp-verification-success":"OTP is verified successfully",
+  "otp-verification-failed":"OTP verification failed, please try again later"
 }

@@ -18,7 +18,7 @@ const registrationSchema = new mongoose.Schema({
     }
   },
   phoneNumber: { type: String, required: false, trim: true },
-  password: { type: String, required: [true, 'Password must be given'], set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
+  password: { type: String, required: [true, 'Password must be given']},
   image: {
     type: Object, required: false, default: {
       publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/user.png`,
@@ -34,8 +34,14 @@ const registrationSchema = new mongoose.Schema({
       delete ret.password;
     },
   },
-},
+});
 
-);
-
+const saltRounds = 10; // Define the number of salt rounds
+registrationSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(saltRounds);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
+});
 module.exports = mongoose.model('Registration', registrationSchema);
