@@ -78,9 +78,25 @@ const checkOTPValidity = (sentTo) => {
   return OTP.findOne({ sentTo: sentTo, status: 'verified' })
 }
 
+const updateOTP = async (otpId,otpStatus) => {
+  try {
+    const otpData = await OTP.findById(otpId);
+    if (!otpData) {
+      return false;
+    }
+    otpData.status = otpStatus;
+    await otpData.save();
+    return true;
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   sendOTP,
   checkOTPByEmail,
   verifyOTP,
-  checkOTPValidity
+  checkOTPValidity,
+  updateOTP
 }

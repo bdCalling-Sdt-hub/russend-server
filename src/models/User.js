@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   role: { type: String, enum: ['user', 'admin', 'worker'], default: 'user' },
-  verificationCode: { type: String, required: false },
+  passcode: { type: String, required: false },
 }, { timestamps: true }, {
   toJSON: {
     transform(doc, ret) {

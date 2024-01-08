@@ -19,6 +19,16 @@ const getUserByEmail = async (email) => {
   return await User.findOne({ email });
 }
 
+const getAllUsers = async (filter, options) => {
+  const {page=1, limit=10} = options;
+  const skip = (page - 1) * limit;
+  const userList = await User.find({...filter}).skip(skip).limit(limit).sort({createdAt: -1});
+  const totalResults = await User.countDocuments({...filter});
+  const totalPages = Math.ceil(totalResults / limit);
+  const pagination = {totalResults, totalPages, currentPage: page, limit};
+  return {userList, pagination};
+}
+
 const login = async (email, password) => {
   
   const user = await User.findOne({ email });
@@ -49,5 +59,6 @@ module.exports = {
   login,
   getUserById,
   updateUser,
-  getUserByEmail
+  getUserByEmail,
+  getAllUsers
 }
