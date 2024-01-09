@@ -1,19 +1,23 @@
 const { verify } = require('jsonwebtoken');
 const Token = require('../models/Token');
+const { set } = require('mongoose');
 
 const addToken = async (tokenBody) => {
   try {
     var token = await verifyToken(tokenBody.token);
     if (token) {
-      token.token = tokenBody.token;
+      token.passcodeToken = tokenBody.token;
     }
     else {
       token = new Token({
-        token: tokenBody.token,
+        passcodeToken: tokenBody.token,
         userId: tokenBody.userId
       });
     }
-    await token.save();
+    const data = await token.save();
+    setTimeout(async () => {
+      await deleteToken(data._id);
+    }, 180000);//delete token after 3 minutes
     return token;
   } catch (error) {
     throw error;
@@ -23,7 +27,7 @@ const addToken = async (tokenBody) => {
 
 verifyToken = async (token) => {
   try {
-    const tokenObj = await Token.findOne({ token: token }).populate('userId');
+    const tokenObj = await Token.findOne({ passcodeToken: token }).populate('userId');
     if (tokenObj) {
       return tokenObj;
     }

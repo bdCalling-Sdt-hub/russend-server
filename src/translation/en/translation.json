@@ -8,13 +8,13 @@
   
   "invalid-otp":"OTP is invalid, please try again",
   "otp-exists":"OTP is already sent to the email",
-  "otp-sent":"OTP is sent to your email, please check",
+  "otp-sent":"OTP is sent to your email, please check the email",
   "otp-expired":"OTP is expired, please try again",
   "otp-verified":"OTP is verified successfully",
 
   "password-reset-success":"Password reset successfully",
 
-  "user-verified":"User is verified successfully",
+  "user-verified":"User registration is successful",
   "forget-password-success":"Password is reset successfully, please check your email for new password",
   "forget-password-error":"OTP can not sent now, please try again later",
   "forget-password-failed":"Something went wrong, please try again later",
@@ -59,5 +59,9 @@
   "termsOfService-added":"Terms Of Service added successfully",
 
   "invalid-token":"Invalid token, try again with a valid one",
-  "passcode-added":"Passcode added successfully"
+  "passcode-added":"Passcode added successfully",
+  "passcode-verfied":"Passcode verified successfully",
+
+  "transaction-chart":"Transaction chart retrived successfully",
+  "transaction-counts":"Transaction counts retrived successfully"
 }

@@ -30,13 +30,11 @@ const getAllUsers = async (filter, options) => {
 }
 
 const login = async (email, password) => {
-  
   const user = await User.findOne({ email });
   if (!user) {
     return null;
   }
   const isMatch = await bcrypt.compare(password, user.password);
-  console.log("email", email, "password", password, "user", user, "isMatch", isMatch);
   if (!isMatch) {
     return null;
   }

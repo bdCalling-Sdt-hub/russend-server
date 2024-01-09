@@ -1,8 +1,9 @@
 const Transaction = require('../models/Transaction');
 
-const addTransaction = async (transactionBody) => {
+const addTransaction = async (transactionBody, sender) => {
   try {
     const transaction = new Transaction(transactionBody);
+    transaction.sender = sender;
     await transaction.save();
     return transaction;
   } catch (error) {
@@ -10,16 +11,17 @@ const addTransaction = async (transactionBody) => {
   }
 }
 
-const getTransactionById = async (id) => {
+const transactionDetailsById = async (id) => {
   try {
-    return await Transaction.findById(id);
+    return await Transaction.findById(id).select("-hiddenFees").populate('sender', 'fullName image');
+
   }
   catch (error) {
     throw error;
   }
 }
 
-const getAllTransactions = async (filter, options) => {
+const allTransactions = async (filter, options) => {
   try {
     const { page = 1, limit = 10 } = options;
     const skip = (page - 1) * limit;
@@ -50,9 +52,70 @@ const updateTransaction = async (transactionId, transactionbody) => {
   }
 }
 
+const transactionCounts = async () => {
+  try {
+    const totalTransactions = await Transaction.countDocuments();
+    const approvedTransactions = await Transaction.countDocuments({ status: 'accepted' });
+    const pendingTransactions = await Transaction.countDocuments({ status: 'pending' });
+    return { totalTransactions, approvedTransactions, pendingTransactions };
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+const transactionChart = async (year) => {
+  try {
+    const yearStartDate = new Date(year, 0, 1);
+    const yearEndDate = new Date(year + 1, 0, 1);
+    console.log(yearStartDate, yearEndDate);
+    const allTransactions = await Transaction.find({
+      createdAt: { $gte: yearStartDate, $lt: yearEndDate },
+      status: "accepted"
+    });
+
+    console.log(allTransactions);
+
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const monthlyCounts = monthNames.map((month, index) => ({
+      name: month,
+      income: 0,
+    }));
+
+    allTransactions.forEach((transaction) => {
+      const createdAt = new Date(transaction.createdAt);
+      const monthIndex = createdAt.getMonth();
+      const monthCount = monthlyCounts[monthIndex];
+      monthCount.income += transaction.amountToSent;
+    });
+
+    return monthlyCounts;
+
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   addTransaction,
-  getTransactionById,
+  transactionDetailsById,
   updateTransaction,
-  getAllTransactions
+  allTransactions,
+  transactionCounts,
+  transactionChart
 }

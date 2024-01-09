@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const tokenSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  token: { type: String, required: true },
+  passcodeToken: { type: String, required: true },
 }, { timestamps: true }
 );
 

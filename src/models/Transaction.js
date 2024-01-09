@@ -14,7 +14,6 @@ const transactionSchema = new mongoose.Schema({
   hiddenFees: { type: Number, required: true, trim: true },
   paymentMethod: { type: String, required: true, trim: true },
   sender:{type:mongoose.Schema.Types.ObjectId,ref:'User'},
-  password: { type: String, required: [true, 'Password must be given']},
   status: { type: String, enum: ['accepted', 'pending', 'transferred', 'cancelled'], default: 'pending' },
 }, { timestamps: true }
 );

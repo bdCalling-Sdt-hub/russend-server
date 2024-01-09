@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors');
 const userRouter = require('./routes/userRouter');
+const transactionRouter = require('./routes/transactionRouter');
 const personalDataPolicyRouter = require('./routes/personalDataPolicyRouter');
 const refundAndCancellationPolicyRouter = require('./routes/refundAndCancellationPolicyRouter');
 const termsOfMoneyTransferRouter = require('./routes/termsOfMoneyTransferRouter');
@@ -63,6 +64,7 @@ app.use(i18nextMiddleware.handle(i18next));
 
 //initilizing API routes
 app.use('/api/users', userRouter);
+app.use('/api/transactions', transactionRouter);
 app.use('/api/personal-data-policies', personalDataPolicyRouter);
 app.use('/api/refund-and-cancellation-policies', refundAndCancellationPolicyRouter);
 app.use('/api/terms-of-money-transfers', termsOfMoneyTransferRouter);

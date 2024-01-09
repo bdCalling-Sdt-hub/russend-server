@@ -1,6 +1,5 @@
 const OTP = require('../models/OTP');
 const emailWithNodemailer = require('../helpers/email');
-const { verify } = require('jsonwebtoken');
 
 const sendOTP = async (name, sentTo, receiverType, purpose) => {
   try {
@@ -33,17 +32,6 @@ const sendOTP = async (name, sentTo, receiverType, purpose) => {
       }
       await emailWithNodemailer(emailData);
     }
-    //setting timeout to reset oneTimeCode to after 3 minutes
-    setTimeout(async () => {
-      try {
-        newOTP.status = 'expired';
-        await newOTP.save();
-        console.log('oneTimeCode reset to null after 3 minute');
-      } catch (error) {
-        console.error('Error updating oneTimeCode:', error);
-        logger.error('Error updating oneTimeCode:', error)
-      }
-    }, 180000); // 3 minute in milliseconds
     return true;
   } catch (error) {
     throw error;
@@ -61,13 +49,15 @@ const checkOTPByEmail = async (sentTo) => {
 
 const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
   try {
-    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, status: 'pending', expiredAt: { $gt: new Date() } })
+    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, expiredAt: { $gt: new Date()}, status:{$eq:"pending"} })
+    console.log('data---------->',otpData);
     if (!otpData) {
-      return false;
+      return null;
     }
     otpData.status = 'verified';
+    otpData.verifiedAt = new Date();
     await otpData.save();
-    return true;
+    return otpData;
   }
   catch (error) {
     throw error;
@@ -75,16 +65,16 @@ const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
 }
 
 const checkOTPValidity = (sentTo) => {
-  return OTP.findOne({ sentTo: sentTo, status: 'verified' })
+  return OTP.findOne({ sentTo: sentTo, expiredAt:{$gt: new Date()}, status: 'verified' })
 }
 
-const updateOTP = async (otpId,otpStatus) => {
+const updateOTP = async (otpId,otpBody) => {
   try {
     const otpData = await OTP.findById(otpId);
     if (!otpData) {
       return false;
     }
-    otpData.status = otpStatus;
+    Object.assign(otpData, otpBody);
     await otpData.save();
     return true;
   }

@@ -1,5 +1,4 @@
 require('dotenv').config();
-const Registration = require('../models/Registration');
 const response = require("../helpers/response");
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -7,7 +6,6 @@ const bcrypt = require('bcryptjs');
 //defining unlinking image function 
 const unlinkImages = require('../common/image/unlinkImage')
 const logger = require("../helpers/logger");
-const { addRegistration, getRegisteredUserByEmail, updateRegisteredUserData, deleteUserRegistration } = require('../services/registrationService');
 const { addUser, login, getUserByEmail, getAllUsers, getUserById } = require('../services/userService')
 const { sendOTP, checkOTPByEmail, verifyOTP, checkOTPValidity, updateOTP } = require('../services/otpService');
 const { addToken, verifyToken, deleteToken } = require('../services/tokenService');
@@ -32,43 +30,36 @@ function hashedPassword(password) {
 const signUp = async (req, res) => {
   try {
     var { fullName, email, phoneNumber, password, role } = req.body;
-
-    const userExist = await getRegisteredUserByEmail(email);
-
-    if (userExist) {
+    var otp
+    if (req.headers.authorization) {
+      otp = req.headers.authorization.split(' ')[1];
+    }
+    if (!otp) {
       const existingOTP = await checkOTPByEmail(email);
       if (existingOTP) {
         console.log('OTP already exists', existingOTP);
         return res.status(409).json(response({ status: 'Error', statusCode: '409', type: 'user', message: req.t('otp-exists'), data: null }));
       }
-      const otpData = await sendOTP(userExist.fullName, email, 'email', 'email-verification');
+      const otpData = await sendOTP(fullName, email, 'email', 'email-verification');
       if (otpData) {
         return res.status(200).json(response({ status: 'Error', statusCode: '200', type: 'user', message: req.t('otp-sent'), data: null }));
       }
     }
-    else {
-      // Create the user in the database
-      const user = new Registration({
-        fullName,
-        email,
-        phoneNumber,
-        password,
-        role
-      });
-
-      await addRegistration(user);
-
-      const otpData = await sendOTP(fullName, email, 'email', 'email-verification');
-
-      if (otpData) {
-        res.status(201).json(response({
-          status: "Created",
-          message: req.t("registration-success"),
-          statusCode: 201,
-          type: "user",
-          data: user,
-        }));
+    else{
+      const otpData = await verifyOTP(email, 'email', 'email-verification', otp);
+      if (!otpData) {
+        return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-otp') }));
       }
+      const userData = {
+        fullName: fullName,
+        email: email,
+        phoneNumber: phoneNumber,
+        password: password,
+        role: role,
+      }
+      const registeredUser = await addUser(userData);
+
+      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-verified'), data: registeredUser }));
     }
   } catch (error) {
     console.error(error);
@@ -77,34 +68,6 @@ const signUp = async (req, res) => {
   }
 };
 
-const verifyEmail = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    const user = await getRegisteredUserByEmail(email);
-    if (!user) {
-      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
-    }
-    const otpVerified = await verifyOTP(email, 'email', 'email-verification', otp);
-    if (!otpVerified) {
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-otp') }));
-    }
-    const userData = {
-      fullName: user.fullName,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      password: user.password,
-      role: user.role,
-    }
-    await addUser(userData);
-    await deleteUserRegistration(user._id);
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-verified') }));
-  }
-  catch (error) {
-    console.error(error);
-    logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ status: 'Error', statusCode: '500', type: 'user', message: req.t('server-error') }));
-  }
-}
 //Sign in
 const signIn = async (req, res) => {
   try {
@@ -211,20 +174,23 @@ const resetPassword = async (req, res) => {
 
 const addWorker = async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, role } = req.body;
+    const { fullName, email, phoneNumber } = req.body;
     if (req.body.userRole !== 'admin') {
       return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+    }
+    const existingUser = await getUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json(response({ status: 'Error', statusCode: '409', type: 'user', message: req.t('user-exists') }));
     }
     const length = 8;
     // Generate a random password
     const password = crypto.randomBytes(length).toString('hex').slice(0, length);
-    const hashedPassword = hashedPassword(password);
     const user = {
       fullName,
       email,
       phoneNumber,
-      password: hashedPassword,
-      role
+      password,
+      role:"worker"
     };
     const userSaved = await addUser(user);
     if (userSaved) {
@@ -251,7 +217,7 @@ const addWorker = async (req, res) => {
         <p>To login, <a href=${url}>Click here</a></p>`
       }
       await emailWithNodemailer(emailData);
-      return res.status(200).json(response({ status: 'OK', statusCode: '201', type: 'user', message: req.t('worker-added') }));
+      return res.status(200).json(response({ status: 'OK', statusCode: '201', type: 'user', message: req.t('worker-added'), data: userSaved }));
     }
     return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('worker-not-added') }));
   }
@@ -355,7 +321,8 @@ const verifyPasscode = async (req, res) => {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('unauthorised') }));
     }
     const accessToken = jwt.sign({ _id: tokenData.userId._id, email: tokenData.userId.email, role: tokenData.userId.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-verified'), token: accessToken }));
+    await deleteToken(tokenData._id);
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-verfied'), token: accessToken }));
   }
   catch (error) {
     console.error(error);
@@ -365,4 +332,4 @@ const verifyPasscode = async (req, res) => {
 }
 
 
-module.exports = { signUp, verifyEmail, signIn, forgetPassword, verifyForgetPasswordOTP, resetPassword, addWorker, getWorkers, getUsers, userDetails, resetPassword, verifyForgetPasswordOTP, forgetPassword, forgetPassword, verifyPasscode, addPasscode, verifyPasscode }
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, resetPassword, addWorker, getWorkers, getUsers, userDetails, resetPassword, verifyForgetPasswordOTP, forgetPassword, forgetPassword, verifyPasscode, addPasscode, verifyPasscode }

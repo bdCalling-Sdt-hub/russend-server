@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   phoneNumber: { type: String, required: false, trim: true },
-  password: { type: String, required: [true, 'Password must be given'] },
+  password: { type: String, required: [true, 'Password must be given'], set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
   image: {
     type: Object, required: false, default: {
       publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/user.png`,
