@@ -20,20 +20,13 @@ function validatePassword(password) {
   return password.length >= 8 && hasNumber && (hasLetter || hasSpecialChar);
 }
 
-function hashedPassword(password) {
-  const saltRounds = 10;
-  const salt = bcrypt.genSaltSync(saltRounds);
-  const hash = bcrypt.hashSync(password, salt);
-  return hash;
-}
-
 //Sign up
 const signUp = async (req, res) => {
   try {
     var { fullName, email, phoneNumber, password, role } = req.body;
     var otp
-    if (req.headers.authorization) {
-      otp = req.headers.authorization.split(' ')[1];
+    if (req.headers['otp'] && req.headers['otp'].startsWith('OTP ')) {
+      otp = req.headers['otp'].split(' ')[1];
     }
     if (!otp) {
       const existingOTP = await checkOTPByEmail(email);
@@ -96,7 +89,8 @@ const signIn = async (req, res) => {
         token = crypto.randomBytes(32).toString('hex');
         const data = {
           token: token,
-          userId: user._id
+          userId: user._id,
+          purpose: 'passcode-verification',
         }
         await addToken(data);
       }
@@ -145,7 +139,14 @@ const verifyForgetPasswordOTP = async (req, res) => {
     if (!otpVerified) {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-otp') }));
     }
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-verified') }));
+    const token = crypto.randomBytes(32).toString('hex');
+    const data = {
+      token: token,
+      userId: user._id,
+      purpose: 'forget-password'
+    }
+    await addToken(data); 
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-verified'), token: token }));
   }
   catch (error) {
     console.error(error);
@@ -156,24 +157,30 @@ const verifyForgetPasswordOTP = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
+    var forgetPasswordToken
+    if (req.headers['forget-password'] && req.headers['forget-password'].startsWith('Forget-password ')) {
+      forgetPasswordToken = req.headers['forget-password'].split(' ')[1];
+    }
+    if(!forgetPasswordToken){
+      return res.status(401).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('unauthorised') }));
+    }
+
+    const tokenData = await verifyToken(forgetPasswordToken, 'forget-password');
+    if(!tokenData){
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-token') }));
+    }
     const { email, password } = req.body;
     const user = await getUserByEmail(email);
     if (!user) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
-    const otpVerified = await checkOTPValidity(email);
-    if (!otpVerified) {
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('otp-expired') }));
-    }
     const isValidPassword = validatePassword(password);
     if (!isValidPassword) {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('password-format-error') }));
     }
-
-    const passwordAfterHassed = hashedPassword(password);
-    user.password = passwordAfterHassed;
+    user.password = password;
     await user.save();
-    await updateOTP(otpVerified._id, 'expired');
+    await deleteToken(tokenData._id);
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('password-reset-success') }));
   }
   catch (error) {
@@ -320,10 +327,10 @@ const addPasscode = async (req, res) => {
 const verifyPasscode = async (req, res) => {
   try {
     var token
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-      token = req.headers.authorization.split(' ')[1];
+    if (req.headers['pass-code'] && req.headers['pass-code'].startsWith('Pass-code ')) {
+      token = req.headers['pass-code'].split(' ')[1];
     }
-    const tokenData = await verifyToken(token);
+    const tokenData = await verifyToken(token, 'passcode-verification');
     if (!tokenData) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('invalid-token') }));
     }

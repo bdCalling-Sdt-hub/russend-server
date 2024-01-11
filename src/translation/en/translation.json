@@ -26,7 +26,7 @@
   "login-failed":"Email or password is incorrect, please try again later",
   "server-error":"Server error, please try again later",
   
-  "unauthorised":"User is not authorised",
+  "unauthorised":"You are not authorised",
   "validation-error":"Form validation error",
   "name-required":"Name is required",
   "email-format-error":"Email format is invalid",

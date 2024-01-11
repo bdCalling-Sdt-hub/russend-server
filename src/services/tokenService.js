@@ -11,7 +11,8 @@ const addToken = async (tokenBody) => {
     else {
       token = new Token({
         passcodeToken: tokenBody.token,
-        userId: tokenBody.userId
+        userId: tokenBody.userId,
+        purpose: tokenBody.purpose
       });
     }
     const data = await token.save();
@@ -25,9 +26,9 @@ const addToken = async (tokenBody) => {
 
 }
 
-const verifyToken = async (token) => {
+const verifyToken = async (token, purpose) => {
   try {
-    const tokenObj = await Token.findOne({ passcodeToken: token }).populate('userId');
+    const tokenObj = await Token.findOne({ passcodeToken: token, purpose: purpose }).populate('userId');
     if (tokenObj) {
       return tokenObj;
     }

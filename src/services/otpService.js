@@ -54,7 +54,7 @@ const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
     if (!otpData) {
       return null;
     }
-    otpData.status = 'verified';
+    otpData.status = 'expired';
     otpData.verifiedAt = new Date();
     await otpData.save();
     return otpData;
