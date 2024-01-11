@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   role: { type: String, enum: ['user', 'admin', 'worker'], default: 'user' },
-  passcode: { type: String, required: false },
+  passcode: { type: String, required: [true, 'Passcode must be given'], set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
 }, { timestamps: true }, {
   toJSON: {
     transform(doc, ret) {

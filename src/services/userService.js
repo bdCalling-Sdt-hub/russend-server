@@ -32,11 +32,11 @@ const getAllUsers = async (filter, options) => {
 const login = async (email, password) => {
   const user = await User.findOne({ email });
   if (!user) {
-    return null;
+    throw ('user-not-exists');
   }
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw ('Invalid Password');
+    throw ('login-failed');
   }
   return user;
 }
@@ -50,11 +50,24 @@ const updateUser = async (userId,userbody) => {
   }
 }
 
+const loginWithPasscode = async (email, passcode) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw ('user-not-exists');
+  }
+  const isMatch = await bcrypt.compare(passcode, user.passcode);
+  if (!isMatch) {
+    throw ('login-failed');
+  }
+  return user;
+}
+
 module.exports = {
   addUser,
   login,
   getUserById,
   updateUser,
   getUserByEmail,
-  getAllUsers
+  getAllUsers,
+  loginWithPasscode
 }

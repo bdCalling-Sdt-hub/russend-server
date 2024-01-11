@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 //defining unlinking image function 
 const unlinkImages = require('../common/image/unlinkImage')
 const logger = require("../helpers/logger");
-const { addUser, login, getUserByEmail, getAllUsers, getUserById, updateUser } = require('../services/userService')
+const { addUser, login, getUserByEmail, getAllUsers, getUserById, updateUser, loginWithPasscode } = require('../services/userService')
 const { sendOTP, checkOTPByEmail, verifyOTP, checkOTPValidity, updateOTP } = require('../services/otpService');
 const { addNotification } = require('../services/notificationService');
 const { addToken, verifyToken, deleteToken } = require('../services/tokenService');
@@ -427,4 +427,25 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword }
+const signInWithPasscode = async (req, res) => {
+  try{
+    const { email, passcode } = req.body;
+    if (!email || !passcode) {
+      return res.status(400).json(response({ statusCode: 200, message: req.t('login-credentials-required'), status: "OK" }));
+    }
+
+    const user = await loginWithPasscode(email, passcode);
+    if(user.role !== 'user'){
+      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+    }
+    const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, token: accessToken }));
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode }
