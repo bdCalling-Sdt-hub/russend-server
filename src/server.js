@@ -25,5 +25,5 @@ socketIO(io);
 global.io = io
 const socketIOPort = process.env.PORT
 server.listen(socketIOPort, process.env.API_SERVER_IP,() => {
-  console.log(`Socket Server is listening on port: ${socketIOPort}`);
+  console.log(`_Socket Server is listening on port: ${socketIOPort}`);
 });

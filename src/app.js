@@ -1,6 +1,14 @@
 const express = require('express')
 const cors = require('cors');
 const userRouter = require('./routes/userRouter');
+const transactionRouter = require('./routes/transactionRouter');
+const personalDataPolicyRouter = require('./routes/personalDataPolicyRouter');
+const refundAndCancellationPolicyRouter = require('./routes/refundAndCancellationPolicyRouter');
+const termsOfMoneyTransferRouter = require('./routes/termsOfMoneyTransferRouter');
+const termsOfServiceRouter = require('./routes/termsOfServiceRouter');
+const notificationRouter = require('./routes/notificationRouter');
+const hiidenFeeRouter = require('./routes/hiddenFeeRouter');
+const paymentInfoRouter = require('./routes/paymentInfoRouter');
 
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 const mongoose = require('mongoose');
@@ -57,15 +65,16 @@ i18next
   });
 app.use(i18nextMiddleware.handle(i18next));
 
-//initilizing logger
-// const logger = require('./helpers/logger');
-// app.use((req, res, next) => {
-//   logger.info(`Method: ${req.method}, Request URL: ${req.url}`);
-//   next();
-// });
-
 //initilizing API routes
 app.use('/api/users', userRouter);
+app.use('/api/transactions', transactionRouter);
+app.use('/api/personal-data-policies', personalDataPolicyRouter);
+app.use('/api/refund-and-cancellation-policies', refundAndCancellationPolicyRouter);
+app.use('/api/terms-of-money-transfers', termsOfMoneyTransferRouter);
+app.use('/api/terms-of-services', termsOfServiceRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/hidden-fees', hiidenFeeRouter);
+app.use('/api/payment-info', paymentInfoRouter);
 
 //testing API is alive
 app.get('/test', (req, res) => {

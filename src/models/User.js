@@ -25,11 +25,8 @@ const userSchema = new mongoose.Schema({
       path: 'public\\uploads\\users\\user.png'
     }
   },
-  emailVerified: { type: Boolean, default: false },
   role: { type: String, enum: ['user', 'admin', 'worker'], default: 'user' },
-  verificationCode: { type: String, required: false },
-  //isDeleted: { type: Boolean, default: false },
-  status: { type: String, enum: ['accepted', 'banned', 'suspended', 'deleted'], default: 'accepted' },
+  passcode: { type: String, required: [true, 'Passcode must be given'], set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
 }, { timestamps: true }, {
   toJSON: {
     transform(doc, ret) {

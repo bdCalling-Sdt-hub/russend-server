@@ -1,3 +1,50 @@
+2024-01-08T11:13:02.033Z [ERROR] {"errors":{"token":{"name":"ValidatorError","message":"Path `token` is required.","properties":{"message":"Path `token` is required.","type":"required","path":"token"},"kind":"required","path":"token"}},"_message":"Token validation failed","name":"ValidationError","message":"Token validation failed: token: Path `token` is required."} (Error Path: /api/users/passcode)
+2024-01-08T11:12:02.457Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:10:10.468Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:10:10.467Z [ERROR] {}
+2024-01-08T11:09:32.891Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:09:32.890Z [ERROR] {}
+2024-01-08T11:08:57.626Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:08:57.626Z [ERROR] {}
+2024-01-08T11:08:43.292Z [ERROR] {"stringValue":"\"\"","valueType":"string","kind":"ObjectId","value":"","path":"_id","reason":{},"name":"CastError","message":"Cast to ObjectId failed for value \"\" (type string) at path \"_id\" for model \"User\""} (Error Path: /api/users/passcode)
+2024-01-08T11:08:32.139Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:08:32.138Z [ERROR] {}
+2024-01-08T11:07:29.197Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:07:29.195Z [ERROR] {}
+2024-01-08T11:06:58.039Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:06:58.037Z [ERROR] {}
+2024-01-08T11:06:12.542Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:06:12.540Z [ERROR] {}
+2024-01-08T11:05:34.448Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:04:57.781Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:04:57.779Z [ERROR] {}
+2024-01-08T11:04:43.925Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:03:02.609Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:03:02.607Z [ERROR] {}
+2024-01-08T11:01:06.424Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:01:06.423Z [ERROR] {}
+2024-01-08T11:00:47.650Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T11:00:47.648Z [ERROR] {}
+2024-01-08T10:58:41.560Z [ERROR] {} (Error Path: /api/users/passcode)
+2024-01-08T10:58:41.559Z [ERROR] {}
+2024-01-08T10:54:02.502Z [ERROR] {} (Error Path: /api/users/verify-passcode)
+2024-01-08T10:38:58.857Z [ERROR] {"stringValue":"\"{\n  token: 'e67ca3216d287727dd8c0a9188522cbf3b5d7857d0c9d820b84aac3765032aa9',\n  userId: new ObjectId('659bbb12c82d7e20b241397e')\n}\"","valueType":"Object","kind":"string","value":{"token":"e67ca3216d287727dd8c0a9188522cbf3b5d7857d0c9d820b84aac3765032aa9","userId":"659bbb12c82d7e20b241397e"},"path":"token","reason":null,"name":"CastError","message":"Cast to string failed for value \"{\n  token: 'e67ca3216d287727dd8c0a9188522cbf3b5d7857d0c9d820b84aac3765032aa9',\n  userId: new ObjectId('659bbb12c82d7e20b241397e')\n}\" (type Object) at path \"token\" for model \"Token\""} (Error Path: /api/users/sign-in)
+2024-01-08T10:38:36.490Z [ERROR] {} (Error Path: /api/users/sign-in)
+2024-01-08T10:37:54.367Z [ERROR] {} (Error Path: /api/users/sign-in)
+2024-01-08T09:21:01.891Z [ERROR] {"errors":{"purpose":{"name":"ValidatorError","message":"`forget-password` is not a valid enum value for path `purpose`.","properties":{"message":"`forget-password` is not a valid enum value for path `purpose`.","type":"enum","enumValues":["email-verification","forgot-password"],"path":"purpose","value":"forget-password"},"kind":"enum","path":"purpose","value":"forget-password"}},"_message":"OTP validation failed","name":"ValidationError","message":"OTP validation failed: purpose: `forget-password` is not a valid enum value for path `purpose`."} (Error Path: /api/users/forget-password)
+2024-01-08T08:51:16.903Z [ERROR] Assignment to constant variable. (Error Path: /api/refund-and-cancellation-policies)
+2024-01-08T08:42:07.131Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:41:23.562Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:40:10.496Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:39:53.824Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:38:44.243Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:37:39.739Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:37:39.367Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:37:18.382Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:36:58.044Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:35:57.488Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:35:17.888Z [ERROR] Assignment to constant variable. (Error Path: /api/terms-of-money-transfers)
+2024-01-08T08:33:07.365Z [ERROR] {} (Error Path: /api/terms-of-money-transfer)
 2024-01-01T07:15:01.244Z [ERROR] Sign up validation error (Error Path: sign-up middleware)
 2024-01-01T07:04:28.258Z [ERROR] Failed to send verification email (Error Path: {"code":"EAUTH","response":"535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials g7-20020a170902740700b001d4bbda7c04sm744382pll.78 - gsmtp","responseCode":535,"command":"AUTH PLAIN"})
 2024-01-01T07:03:33.726Z [ERROR] Sign up validation error (Error Path: sign-up middleware)
