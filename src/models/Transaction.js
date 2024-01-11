@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 const transactionSchema = new mongoose.Schema({
   firstName: { type: String, required: [true, 'First Name is must be given'], trim: true },

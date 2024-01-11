@@ -36,16 +36,9 @@ const allTransactions = async (filter, options) => {
   }
 }
 
-const updateTransaction = async (transactionId, transactionbody) => {
+const updateTransactionById = async (transactionId, transactionbody) => {
   try {
-    const existingTransaction = await Transaction.findById(transactionId);
-    if (!existingTransaction) {
-      throw new Error('Transaction not found');
-    }
-    const transaction = new Transaction(transactionbody);
-    Object.assign(existingTransaction, transaction);
-    await existingTransaction.save();
-    return existingTransaction;
+    return await Transaction.findByIdAndUpdate(transactionId, transactionbody, { new: true });;
   }
   catch (error) {
     throw error;
@@ -114,7 +107,7 @@ const transactionChart = async (year) => {
 module.exports = {
   addTransaction,
   transactionDetailsById,
-  updateTransaction,
+  updateTransactionById,
   allTransactions,
   transactionCounts,
   transactionChart

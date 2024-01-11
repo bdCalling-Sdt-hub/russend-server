@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 const countrySchema = new mongoose.Schema({
   countryName: { type: String, required: [true, 'Country Name is required'], trim: true },

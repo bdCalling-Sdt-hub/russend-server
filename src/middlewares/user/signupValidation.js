@@ -50,7 +50,7 @@ const validationMiddleware = async (req, res, next) => {
     next(); // Continue to the next middleware or route handler
   }
   catch (error) {
-    logger.error(error, 'sign-up middleware');
+    logger.error(error, req.originalUrl);
     console.error(error);
   }
 };

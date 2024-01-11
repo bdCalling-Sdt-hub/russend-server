@@ -6,8 +6,9 @@ const bcrypt = require('bcryptjs');
 //defining unlinking image function 
 const unlinkImages = require('../common/image/unlinkImage')
 const logger = require("../helpers/logger");
-const { addUser, login, getUserByEmail, getAllUsers, getUserById } = require('../services/userService')
+const { addUser, login, getUserByEmail, getAllUsers, getUserById, updateUser } = require('../services/userService')
 const { sendOTP, checkOTPByEmail, verifyOTP, checkOTPValidity, updateOTP } = require('../services/otpService');
+const { addNotification } = require('../services/notificationService');
 const { addToken, verifyToken, deleteToken } = require('../services/tokenService');
 const emailWithNodemailer = require('../helpers/email');
 const crypto = require('crypto');
@@ -45,7 +46,7 @@ const signUp = async (req, res) => {
         return res.status(200).json(response({ status: 'Error', statusCode: '200', type: 'user', message: req.t('otp-sent'), data: null }));
       }
     }
-    else{
+    else {
       const otpData = await verifyOTP(email, 'email', 'email-verification', otp);
       if (!otpData) {
         return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-otp') }));
@@ -58,6 +59,16 @@ const signUp = async (req, res) => {
         role: role,
       }
       const registeredUser = await addUser(userData);
+
+      const message = "New user registered named " + fullName;
+      const notification = {
+        message: message,
+        linkId: registeredUser._id,
+        type: 'user',
+        role: 'admin',
+      }
+      const sendNotification = await addNotification(notification);
+      io.emit('russend-admin-notification', sendNotification)
 
       return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-verified'), data: registeredUser }));
     }
@@ -190,7 +201,7 @@ const addWorker = async (req, res) => {
       email,
       phoneNumber,
       password,
-      role:"worker"
+      role: "worker"
     };
     const userSaved = await addUser(user);
     if (userSaved) {
@@ -331,5 +342,82 @@ const verifyPasscode = async (req, res) => {
   }
 }
 
+const blockUser = async (req, res) => {
+  try {
+    if (req.body.userRole !== 'admin') {
+      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+    }
+    const existingUser = await getUserById(req.body.userId);
+    if (!existingUser) {
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
+    }
+    if (existingUser.isBlocked) {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-already-blocked') }));
+    }
+    existingUser.isBlocked = true;
+    const updatedUser = await updateUser(req.body.userId, existingUser);
+    if (updatedUser) {
+      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-blocked'), data: existingUser }));
+    }
+    else {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-not-blocked') }));
+    }
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+  }
+}
 
-module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, resetPassword, addWorker, getWorkers, getUsers, userDetails, resetPassword, verifyForgetPasswordOTP, forgetPassword, forgetPassword, verifyPasscode, addPasscode, verifyPasscode }
+const unBlockUser = async (req, res) => {
+  try {
+    if (req.body.userRole !== 'admin') {
+      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+    }
+    const existingUser = await getUserById(req.body.userId);
+    if (!existingUser) {
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
+    }
+    if (!existingUser.isBlocked) {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-already-unblocked') }));
+    }
+    existingUser.isBlocked = true;
+    const updatedUser = await updateUser(req.body.userId, existingUser);
+    if (updatedUser) {
+      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-unblocked'), data: existingUser }));
+    }
+    else {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-not-unblocked') }));
+    }
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const isValidPassword = validatePassword(newPassword);
+    if (!isValidPassword) {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('password-format-error') }));
+    }
+    const verifyUser = await login(req.body.userEmail, oldPassword);
+    if (!verifyUser) {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-not-exists') }));
+    }
+    verifyUser.password = newPassword;
+    await verifyUser.save();
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('password-changed'), data: verifyUser }));
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword }

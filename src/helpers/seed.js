@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 const User = require('../models/User');
+const PaymentInfo = require('../models/PaymentInfo');
 const bcrypt = require('bcryptjs');
 
 function hashedPassword(password) {
@@ -40,6 +41,12 @@ const usersData = [
   }
 ];
 
+const paymentInfo = {
+  "name": "Сбербанк (sberbank)",
+  "phoneNumber": "+79050048977",
+  "bankName": "ричард манни в",
+}
+
 // Function to drop the entire database
 const dropDatabase = async () => {
   try {
@@ -61,6 +68,16 @@ const seedUsers = async () => {
   }
 };
 
+const seedPaymentInfo = async () => {
+  try {
+    await PaymentInfo.deleteMany();
+    await PaymentInfo.insert(paymentInfo);
+    console.log('Payment info seeded successfully!');
+  } catch (err) {
+    console.error('Error seeding payment info:', err);
+  }
+};
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_CONNECTION, {});
 
@@ -69,6 +86,7 @@ const seedDatabase = async () => {
   try {
     await dropDatabase(); 
     await seedUsers();
+    await seedPaymentInfo();
     console.log('--------------> Database seeding completed <--------------');
   } catch (err) {
     console.error('Error seeding database:', err);

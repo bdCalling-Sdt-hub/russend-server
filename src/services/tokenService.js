@@ -25,7 +25,7 @@ const addToken = async (tokenBody) => {
 
 }
 
-verifyToken = async (token) => {
+const verifyToken = async (token) => {
   try {
     const tokenObj = await Token.findOne({ passcodeToken: token }).populate('userId');
     if (tokenObj) {
@@ -39,7 +39,7 @@ verifyToken = async (token) => {
   }
 }
 
-deleteToken = async (tokenId) => {
+const deleteToken = async (tokenId) => {
   try {
     return await Token.findByIdAndDelete(tokenId);
   } catch (error) {

@@ -1,4 +1,4 @@
-const { addTransaction, allTransactions, transactionDetailsById, transactionCounts, transactionChart } = require('../services/transactionService')
+const { addTransaction, allTransactions, transactionDetailsById, transactionCounts, transactionChart, updateTransactionById } = require('../services/transactionService')
 const response = require('../helpers/response')
 const logger = require('../helpers/logger')
 
@@ -51,8 +51,12 @@ const getTransactionById = async (req, res) => {
 
 const updateTransaction = async (req, res) => {
   try {
-    const transaction = await updateTransaction(req.params.id, req.body);
-    return res.status(201).json(response({ status: 'Success', statusCode: '201', type: 'transaction', message: req.t('transactionAdded'), data: transaction }));
+    const transaction = await transactionDetailsById(req.params.id);
+    if(!transaction.status){
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'transaction', message: req.t('transaction-not-found') }));
+    }
+    const updatedTransaction = await updateTransactionById(req.params.id, req.body);
+    return res.status(201).json(response({ status: 'Success', statusCode: '201', type: 'transaction', message: req.t('transaction-updated'), data: updatedTransaction }));
   } catch (error) {
     console.error(error);
     logger.error(error.message, req.originalUrl);

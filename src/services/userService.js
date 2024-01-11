@@ -36,20 +36,18 @@ const login = async (email, password) => {
   }
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return null;
+    throw ('Invalid Password');
   }
   return user;
 }
 
 const updateUser = async (userId,userbody) => {
-  const existingUser = await User.findById(userId);
-  if (!existingUser) {
-    throw new Error('User not found');
+  try{
+    return await User.findByIdAndUpdate(userId, userbody, { new: true });
   }
-  const user = new User(userbody);
-  Object.assign(existingUser, user);
-  await existingUser.save();
-  return existingUser;
+  catch(error){
+    throw error;
+  }
 }
 
 module.exports = {

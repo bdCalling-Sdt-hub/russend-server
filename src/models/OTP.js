@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 const otpSchema = new mongoose.Schema({
   sentTo: {
