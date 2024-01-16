@@ -15,6 +15,7 @@
   "password-reset-success":"Password reset successfully",
 
   "user-verified":"User registration is successful",
+  "user-reregistered":"User is already registered, please add passcode",
   "forget-password-success":"Password is reset successfully, please check your email for new password",
   "forget-password-error":"OTP can not sent now, please try again later",
   "forget-password-failed":"Something went wrong, please try again later",
@@ -37,6 +38,7 @@
   "otp-verification-failed":"OTP verification failed, please try again later",
   "user-list":"Users list retrived successfully",
   "user-details":"User details retrived successfully",
+  "exception-in-authorization":"System can not authorize the user, please try again later",
 
   "worker-added":"Worker added successfully",
   "worker-not-added":"Worker not added, please try again later",
@@ -62,6 +64,7 @@
   "invalid-token":"Invalid token, try again with a valid one",
   "passcode-added":"Passcode added successfully",
   "passcode-verfied":"Passcode verified successfully",
+  "passcode-already-exists":"Passcode is already set in your account",
 
   "transaction-chart":"Transaction chart retrived successfully",
   "transaction-counts":"Transaction counts retrived successfully",
@@ -91,5 +94,6 @@
   "ammountToSentCurrency-required":"Amount to sent currency is required",
   "amountToSent-format-error":"Amount to sent must be a number greater than 0",
   "lastName-required":"Last name is required",
-  "firstName-required":"First name is required"
+  "firstName-required":"First name is required",
+  "user-updated":"User profile updated successfully"
 }

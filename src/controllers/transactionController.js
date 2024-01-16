@@ -51,6 +51,9 @@ const getTransactionById = async (req, res) => {
 
 const updateTransaction = async (req, res) => {
   try {
+    if(req.body.userRole==='user'){
+      res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'transaction', message: req.t('unauthorised') }));
+    }
     const transaction = await transactionDetailsById(req.params.id);
     if(!transaction.status){
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'transaction', message: req.t('transaction-not-found') }));

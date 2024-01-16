@@ -4,40 +4,29 @@ const User = require('../models/User');
 const PaymentInfo = require('../models/PaymentInfo');
 const bcrypt = require('bcryptjs');
 
-function hashedPassword(password) {
-  const saltRounds = 10;
-  const salt = bcrypt.genSaltSync(saltRounds);
-  const hash = bcrypt.hashSync(password, salt);
-  return hash;
-}
-
-const adminHassedPassword = hashedPassword('helloadmin');
-const workerHassedPassword = hashedPassword('helloworker');
-const clinetHassedPassword = hashedPassword('helloclinet');
-
 // Sample data
 const usersData = [
   {
     "fullName": "Testing Admin",
     "email": "ad.residplus@gmail.com",
     "phoneNumber": "01735566789",
-    "password": adminHassedPassword,
+    "password": 'helloadmin',
     "role": "admin"
   },
   {
     "fullName": "Testing Worker",
     "email": "sub.residplus@gmail.com",
     "phoneNumber": "01933456040",
-    "password": workerHassedPassword,
+    "password": 'helloworker',
     "role": "worker"
   },
   {
     "fullName": "Testing Clinet",
-    "email": "testing.clinet@gmail.com",
+    "email": "testing.client@gmail.com",
     "phoneNumber": "01734456873",
-    "password": clinetHassedPassword,
+    "password": 'helloclient',
     "role": "user",
-    "passCode": "1234"
+    "passcode": "1234"
   }
 ];
 
@@ -71,7 +60,7 @@ const seedUsers = async () => {
 const seedPaymentInfo = async () => {
   try {
     await PaymentInfo.deleteMany();
-    await PaymentInfo.insert(paymentInfo);
+    await PaymentInfo.create(paymentInfo);
     console.log('Payment info seeded successfully!');
   } catch (err) {
     console.error('Error seeding payment info:', err);

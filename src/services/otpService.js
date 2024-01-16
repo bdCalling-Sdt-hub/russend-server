@@ -49,8 +49,7 @@ const checkOTPByEmail = async (sentTo) => {
 
 const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
   try {
-    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, expiredAt: { $gt: new Date()}, status:{$eq:"pending"} })
-    console.log('data---------->',otpData);
+    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, expiredAt: { $gt: new Date() }, status: { $eq: "pending" }, verifiedAt: { $eq: null } })
     if (!otpData) {
       return null;
     }
@@ -65,10 +64,10 @@ const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
 }
 
 const checkOTPValidity = (sentTo) => {
-  return OTP.findOne({ sentTo: sentTo, expiredAt:{$gt: new Date()}, status: 'verified' })
+  return OTP.findOne({ sentTo: sentTo, expiredAt: { $gt: new Date() }, status: 'verified' })
 }
 
-const updateOTP = async (otpId,otpBody) => {
+const updateOTP = async (otpId, otpBody) => {
   try {
     const otpData = await OTP.findById(otpId);
     if (!otpData) {

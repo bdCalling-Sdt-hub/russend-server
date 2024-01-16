@@ -32,11 +32,11 @@ const getAllUsers = async (filter, options) => {
 const login = async (email, password) => {
   const user = await User.findOne({ email });
   if (!user) {
-    throw ('user-not-exists');
+    return null;
   }
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw ('login-failed');
+    return null;
   }
   return user;
 }
@@ -53,11 +53,12 @@ const updateUser = async (userId,userbody) => {
 const loginWithPasscode = async (email, passcode) => {
   const user = await User.findOne({ email });
   if (!user) {
-    throw ('user-not-exists');
+    return null;
   }
+  console.log(passcode, user);
   const isMatch = await bcrypt.compare(passcode, user.passcode);
   if (!isMatch) {
-    throw ('login-failed');
+    return null;
   }
   return user;
 }

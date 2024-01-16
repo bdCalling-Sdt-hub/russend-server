@@ -2,7 +2,6 @@ require('dotenv').config();
 const response = require("../helpers/response");
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const bcrypt = require('bcryptjs');
 //defining unlinking image function 
 const unlinkImages = require('../common/image/unlinkImage')
 const logger = require("../helpers/logger");
@@ -23,7 +22,13 @@ function validatePassword(password) {
 //Sign up
 const signUp = async (req, res) => {
   try {
-    var { fullName, email, phoneNumber, password, role } = req.body;
+    var otpPurpose = 'email-verification';
+    var existingUser = false;
+    if(req.body.existingUser){
+      existingUser = true;
+      otpPurpose = 'passcode-verification';
+    }
+    var { fullName, email, phoneNumber, password } = req.body;
     var otp
     if (req.headers['otp'] && req.headers['otp'].startsWith('OTP ')) {
       otp = req.headers['otp'].split(' ')[1];
@@ -34,36 +39,52 @@ const signUp = async (req, res) => {
         console.log('OTP already exists', existingOTP);
         return res.status(409).json(response({ status: 'Error', statusCode: '409', type: 'user', message: req.t('otp-exists'), data: null }));
       }
-      const otpData = await sendOTP(fullName, email, 'email', 'email-verification');
+      const otpData = await sendOTP(fullName, email, 'email', otpPurpose);
       if (otpData) {
         return res.status(200).json(response({ status: 'Error', statusCode: '200', type: 'user', message: req.t('otp-sent'), data: null }));
       }
     }
     else {
-      const otpData = await verifyOTP(email, 'email', 'email-verification', otp);
+      const otpData = await verifyOTP(email, 'email', otpPurpose, otp);
       if (!otpData) {
         return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-otp') }));
       }
-      const userData = {
-        fullName: fullName,
-        email: email,
-        phoneNumber: phoneNumber,
-        password: password,
-        role: role,
+      var passcodeToken;
+      var registeredUser;
+      var message
+      if(existingUser){
+        registeredUser = req.body.existingUser;
+        passcodeToken = crypto.randomBytes(32).toString('hex');
+        message = req.t('user-reregistered');
       }
-      const registeredUser = await addUser(userData);
-
-      const message = "New user registered named " + fullName;
-      const notification = {
-        message: message,
-        linkId: registeredUser._id,
-        type: 'user',
-        role: 'admin',
+      else{
+        const userData = {
+          fullName: fullName,
+          email: email,
+          phoneNumber: phoneNumber,
+          password: password,
+          role: "user",
+        }
+        registeredUser = await addUser(userData);
+        const message = "New user registered named " + fullName;
+        const notification = {
+          message: message,
+          linkId: registeredUser._id,
+          type: 'user',
+          role: 'admin',
+        }
+        const sendNotification = await addNotification(notification);
+        io.emit('russend-admin-notification', sendNotification)
+        message = req.t('user-verified');
+        passcodeToken = crypto.randomBytes(32).toString('hex');
       }
-      const sendNotification = await addNotification(notification);
-      io.emit('russend-admin-notification', sendNotification)
-
-      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-verified'), data: registeredUser }));
+      const data = {
+        token: passcodeToken,
+        userId: registeredUser._id,
+        purpose: 'passcode-verification',
+      }
+      await addToken(data);
+      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: message, data: registeredUser, passcodeToken: passcodeToken }));
     }
   } catch (error) {
     console.error(error);
@@ -85,22 +106,41 @@ const signIn = async (req, res) => {
 
     if (user) {
       var token;
+      var refreshToken;
+      var passcodeToken;
       if (user.role === 'user') {
-        token = crypto.randomBytes(32).toString('hex');
+        passcodeToken = crypto.randomBytes(32).toString('hex');
         const data = {
-          token: token,
+          token: passcodeToken,
           userId: user._id,
           purpose: 'passcode-verification',
         }
         await addToken(data);
       }
       else {
-        token = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
+        token = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
+        refreshToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
       }
-      return res.status(200).json(response({ statusCode: 200, message: req.t('login-success'), status: "OK", type: "user", data: user, token: token }));
+      
+      return res.status(200).json(response({ statusCode: 200, message: req.t('login-success'), status: "OK", type: "user", data: user, accessToken: token, refreshToken: refreshToken, passcodeToken: passcodeToken }));
     }
     return res.status(401).json(response({ statusCode: 200, message: req.t('login-failed'), status: "OK" }));
 
+  } catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 200, message: req.t(error), status: "Error" }));
+  }
+};
+
+const signInWithRefreshToken = async (req, res) => {
+  try {
+    const user = await getUserById(req.body.userId);
+    if (!user) {
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
+    }
+    const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, token: accessToken }));
   } catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
@@ -146,7 +186,7 @@ const verifyForgetPasswordOTP = async (req, res) => {
       purpose: 'forget-password'
     }
     await addToken(data); 
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-verified'), token: token }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-verified'), forgetPasswordToken: token }));
   }
   catch (error) {
     console.error(error);
@@ -212,8 +252,9 @@ const addWorker = async (req, res) => {
     };
     const userSaved = await addUser(user);
     if (userSaved) {
+
       const subject = 'Worker login credentials for Russend';
-      const url = `${process.env.DASHBOARD_LINK}`;
+      const url = 'http://localhost:3000/login'
       const emailData = {
         email: email,
         subject: subject,
@@ -302,6 +343,14 @@ const userDetails = async (req, res) => {
 
 const addPasscode = async (req, res) => {
   try {
+    var token
+    if (req.headers['pass-code'] && req.headers['pass-code'].startsWith('Pass-code ')) {
+      token = req.headers['pass-code'].split(' ')[1];
+    }
+    const tokenData = await verifyToken(token, 'passcode-verification');
+    if (!tokenData) {
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('invalid-token') }));
+    }
     const clientId = req.body.clientId;
     const passcode = req.body.passcode;
     const userData = await getUserById(clientId);
@@ -334,17 +383,17 @@ const verifyPasscode = async (req, res) => {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('invalid-token') }));
     }
     const { passcode } = req.body;
-    if (passcode && tokenData.userId.passcode !== passcode) {
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('unauthorised') }));
-    }
+    console.log(tokenData.userId.email, passcode);
+    const user = await loginWithPasscode(tokenData.userId.email, passcode);
     const accessToken = jwt.sign({ _id: tokenData.userId._id, email: tokenData.userId.email, role: tokenData.userId.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
+    const refreshToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
     await deleteToken(tokenData._id);
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-verfied'), token: accessToken }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-verfied'), accessToken: accessToken, refreshToken: refreshToken }));
   }
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "OK" }));
+    return res.status(500).json(response({ statusCode: 200, message: req.t(error.message), status: "OK" }));
   }
 }
 
@@ -447,4 +496,30 @@ const signInWithPasscode = async (req, res) => {
   }
 }
 
-module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode }
+const updateProfile = async (req, res) => {
+  try{
+    const { fullName, phoneNumber } = req.body;
+    const user = await getUserById(req.body.userId);
+    if(!user){
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
+    }
+    user.fullName = !fullName?user.fullName:fullName;
+    user.phoneNumber = !phoneNumber?user.phoneNumber:phoneNumber;
+    if(req.file){
+      if(user.image.path!=='public\\uploads\\users\\user.png'){
+        unlinkImages(user.image.path);
+      }
+      user.image.publicFileUrl = `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/${req.file.filename}`;
+      user.image.path = req.file.path;
+    }
+    await user.save();
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-updated'), data: user }));
+  }
+  catch(error){
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile }
