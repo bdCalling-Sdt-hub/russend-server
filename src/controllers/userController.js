@@ -28,7 +28,7 @@ const signUp = async (req, res) => {
       existingUser = true;
       otpPurpose = 'passcode-verification';
     }
-    var { fullName, email, phoneNumber, password } = req.body;
+    var { fullName, email, phoneNumber, password, country } = req.body;
     var otp
     if (req.headers['otp'] && req.headers['otp'].startsWith('OTP ')) {
       otp = req.headers['otp'].split(' ')[1];
@@ -64,6 +64,9 @@ const signUp = async (req, res) => {
           phoneNumber: phoneNumber,
           password: password,
           role: "user",
+        }
+        if(country){
+          userData.country = country;
         }
         registeredUser = await addUser(userData);
         const message = "New user registered named " + fullName;
@@ -232,7 +235,7 @@ const resetPassword = async (req, res) => {
 
 const addWorker = async (req, res) => {
   try {
-    const { fullName, email, phoneNumber } = req.body;
+    const { fullName, email, phoneNumber, country } = req.body;
     if (req.body.userRole !== 'admin') {
       return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
     }
@@ -250,6 +253,9 @@ const addWorker = async (req, res) => {
       password,
       role: "worker"
     };
+    if(country){
+      user.country = country;
+    }
     const userSaved = await addUser(user);
     if (userSaved) {
 
