@@ -254,7 +254,7 @@ const addWorker = async (req, res) => {
     if (userSaved) {
 
       const subject = 'Worker login credentials for Russend';
-      const url = 'http://localhost:3000/login'
+      const url = process.env.DASHBOARD_LINK;
       const emailData = {
         email: email,
         subject: subject,
