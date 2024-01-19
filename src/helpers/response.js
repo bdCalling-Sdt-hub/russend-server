@@ -24,6 +24,9 @@ const response = (response = {}) => {
     if(response.forgetPasswordToken) {
         responseObject.data.forgetPasswordToken = response.forgetPasswordToken;
     }
+    if(response.path) {
+        responseObject.data.path = response.path;
+    }
     if (response.errors) {
         responseObject.errors = response.errors;
     }

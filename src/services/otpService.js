@@ -1,5 +1,6 @@
 const OTP = require('../models/OTP');
 const emailWithNodemailer = require('../helpers/email');
+require('dotenv').config();
 
 const sendOTP = async (name, sentTo, receiverType, purpose) => {
   try {
@@ -27,7 +28,7 @@ const sendOTP = async (name, sentTo, receiverType, purpose) => {
         html: `
           <h1>Hello, ${name}</h1>
           <p>Your One Time Code is <h3>${otp}</h3> to verify your account</p>
-          <small>This Code is valid for 3 minutes</small>
+          <small>This Code is valid for ${process.env.OTP_EXPIRY_TIME}minutes</small>
         `
       }
       await emailWithNodemailer(emailData);

@@ -55,7 +55,6 @@ const loginWithPasscode = async (email, passcode) => {
   if (!user) {
     return null;
   }
-  console.log(passcode, user);
   const isMatch = await bcrypt.compare(passcode, user.passcode);
   if (!isMatch) {
     return null;

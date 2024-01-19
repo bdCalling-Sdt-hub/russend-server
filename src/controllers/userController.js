@@ -24,7 +24,7 @@ const signUp = async (req, res) => {
   try {
     var otpPurpose = 'email-verification';
     var existingUser = false;
-    if(req.body.existingUser){
+    if (req.body.existingUser) {
       existingUser = true;
       otpPurpose = 'passcode-verification';
     }
@@ -37,11 +37,11 @@ const signUp = async (req, res) => {
       const existingOTP = await checkOTPByEmail(email);
       if (existingOTP) {
         console.log('OTP already exists', existingOTP);
-        return res.status(409).json(response({ status: 'Error', statusCode: '409', type: 'user', message: req.t('otp-exists'), data: null }));
+        return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-exists'), data: null }));
       }
       const otpData = await sendOTP(fullName, email, 'email', otpPurpose);
       if (otpData) {
-        return res.status(200).json(response({ status: 'Error', statusCode: '200', type: 'user', message: req.t('otp-sent'), data: null }));
+        return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-sent'), data: null }));
       }
     }
     else {
@@ -52,12 +52,12 @@ const signUp = async (req, res) => {
       var passcodeToken;
       var registeredUser;
       var message
-      if(existingUser){
+      if (existingUser) {
         registeredUser = req.body.existingUser;
         passcodeToken = crypto.randomBytes(32).toString('hex');
         message = req.t('user-reregistered');
       }
-      else{
+      else {
         const userData = {
           fullName: fullName,
           email: email,
@@ -65,11 +65,11 @@ const signUp = async (req, res) => {
           password: password,
           role: "user",
         }
-        if(country){
+        if (country) {
           userData.country = country;
         }
         registeredUser = await addUser(userData);
-        const message = "New user registered named " + fullName;
+        var message = "New user registered named " + fullName;
         const notification = {
           message: message,
           linkId: registeredUser._id,
@@ -87,7 +87,7 @@ const signUp = async (req, res) => {
         purpose: 'passcode-verification',
       }
       await addToken(data);
-      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: message, data: registeredUser, passcodeToken: passcodeToken }));
+      return res.status(201).json(response({ status: 'OK', statusCode: '201', type: 'user', message: message, data: registeredUser, passcodeToken: passcodeToken }));
     }
   } catch (error) {
     console.error(error);
@@ -107,7 +107,7 @@ const signIn = async (req, res) => {
 
     const user = await login(email, password);
 
-    if (user) {
+    if (user && !user.isBlocked) {
       var token;
       var refreshToken;
       var passcodeToken;
@@ -124,9 +124,13 @@ const signIn = async (req, res) => {
         token = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
         refreshToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
       }
-      
+
       return res.status(200).json(response({ statusCode: 200, message: req.t('login-success'), status: "OK", type: "user", data: user, accessToken: token, refreshToken: refreshToken, passcodeToken: passcodeToken }));
     }
+    else if (user && user.isBlocked) {
+      return res.status(401).json(response({ statusCode: 200, message: req.t('blocked-user'), status: "OK" }));
+    }
+    console.log('User is blocked', user.isBlocked);
     return res.status(401).json(response({ statusCode: 200, message: req.t('login-failed'), status: "OK" }));
 
   } catch (error) {
@@ -139,7 +143,7 @@ const signIn = async (req, res) => {
 const signInWithRefreshToken = async (req, res) => {
   try {
     const user = await getUserById(req.body.userId);
-    if (!user) {
+    if (!user || (user && user.isBlocked)) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
     const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
@@ -188,7 +192,7 @@ const verifyForgetPasswordOTP = async (req, res) => {
       userId: user._id,
       purpose: 'forget-password'
     }
-    await addToken(data); 
+    await addToken(data);
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('otp-verified'), forgetPasswordToken: token }));
   }
   catch (error) {
@@ -204,12 +208,12 @@ const resetPassword = async (req, res) => {
     if (req.headers['forget-password'] && req.headers['forget-password'].startsWith('Forget-password ')) {
       forgetPasswordToken = req.headers['forget-password'].split(' ')[1];
     }
-    if(!forgetPasswordToken){
+    if (!forgetPasswordToken) {
       return res.status(401).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('unauthorised') }));
     }
 
     const tokenData = await verifyToken(forgetPasswordToken, 'forget-password');
-    if(!tokenData){
+    if (!tokenData) {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-token') }));
     }
     const { email, password } = req.body;
@@ -253,7 +257,7 @@ const addWorker = async (req, res) => {
       password,
       role: "worker"
     };
-    if(country){
+    if (country) {
       user.country = country;
     }
     const userSaved = await addUser(user);
@@ -297,11 +301,21 @@ const getUsers = async (req, res) => {
     if (req.body.userRole !== 'admin') {
       return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
     }
+
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const filter = {
       role: 'user'
     };
+    const search = req.query.search;
+    const searchRegExp = new RegExp('.*' + search + '.*', 'i');
+    if (search) {
+      filter.$or = [
+        { fullName: searchRegExp },
+        { email: searchRegExp },
+        { phoneNumber: searchRegExp },
+      ]
+    }
     const options = { page, limit };
     const { userList, pagination } = await getAllUsers(filter, options);
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-list'), data: { userList, pagination } }));
@@ -323,6 +337,15 @@ const getWorkers = async (req, res) => {
     const filter = {
       role: 'worker'
     };
+    const search = req.query.search;
+    const searchRegExp = new RegExp('.*' + search + '.*', 'i');
+    if (search) {
+      filter.$or = [
+        { fullName: searchRegExp },
+        { email: searchRegExp },
+        { phoneNumber: searchRegExp },
+      ]
+    }
     const options = { page, limit };
     const { userList, pagination } = await getAllUsers(filter, options);
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('worker-list'), data: { userList, pagination } }));
@@ -408,7 +431,7 @@ const blockUser = async (req, res) => {
     if (req.body.userRole !== 'admin') {
       return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
     }
-    const existingUser = await getUserById(req.body.userId);
+    const existingUser = await getUserById(req.params.id);
     if (!existingUser) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
@@ -416,13 +439,10 @@ const blockUser = async (req, res) => {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-already-blocked') }));
     }
     existingUser.isBlocked = true;
-    const updatedUser = await updateUser(req.body.userId, existingUser);
-    if (updatedUser) {
-      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-blocked'), data: existingUser }));
-    }
-    else {
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-not-blocked') }));
-    }
+    existingUser.save();
+
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-blocked'), data: existingUser }));
+
   }
   catch (error) {
     console.error(error);
@@ -436,21 +456,17 @@ const unBlockUser = async (req, res) => {
     if (req.body.userRole !== 'admin') {
       return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
     }
-    const existingUser = await getUserById(req.body.userId);
+    const existingUser = await getUserById(req.params.id);
     if (!existingUser) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
     if (!existingUser.isBlocked) {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-already-unblocked') }));
     }
-    existingUser.isBlocked = true;
-    const updatedUser = await updateUser(req.body.userId, existingUser);
-    if (updatedUser) {
-      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-unblocked'), data: existingUser }));
-    }
-    else {
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-not-unblocked') }));
-    }
+    existingUser.isBlocked = false;
+    existingUser.save();
+
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-unblocked'), data: existingUser }));
   }
   catch (error) {
     console.error(error);
@@ -482,18 +498,18 @@ const changePassword = async (req, res) => {
 }
 
 const signInWithPasscode = async (req, res) => {
-  try{
+  try {
     const { email, passcode } = req.body;
     if (!email || !passcode) {
       return res.status(400).json(response({ statusCode: 200, message: req.t('login-credentials-required'), status: "OK" }));
     }
 
     const user = await loginWithPasscode(email, passcode);
-    if(user.role !== 'user'){
+    if (!user || (user && user.role !== 'user') || (user && user.isBlocked)) {
       return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
     }
     const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, token: accessToken }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), accessToken: accessToken }));
   }
   catch (error) {
     console.error(error);
@@ -503,16 +519,16 @@ const signInWithPasscode = async (req, res) => {
 }
 
 const updateProfile = async (req, res) => {
-  try{
+  try {
     const { fullName, phoneNumber } = req.body;
     const user = await getUserById(req.body.userId);
-    if(!user){
+    if (!user) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
-    user.fullName = !fullName?user.fullName:fullName;
-    user.phoneNumber = !phoneNumber?user.phoneNumber:phoneNumber;
-    if(req.file){
-      if(user.image.path!=='public\\uploads\\users\\user.png'){
+    user.fullName = !fullName ? user.fullName : fullName;
+    user.phoneNumber = !phoneNumber ? user.phoneNumber : phoneNumber;
+    if (req.file) {
+      if (user.image.path !== 'public\\uploads\\users\\user.png') {
         unlinkImages(user.image.path);
       }
       user.image.publicFileUrl = `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/${req.file.filename}`;
@@ -521,11 +537,42 @@ const updateProfile = async (req, res) => {
     await user.save();
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-updated'), data: user }));
   }
-  catch(error){
+  catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
     return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
   }
 }
 
-module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile }
+const getBlockedUsers = async (req, res) => {
+  try {
+    if (req.body.userRole !== 'admin') {
+      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+    }
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const filter = {
+      isBlocked: true
+    };
+    const search = req.query.search;
+    const searchRegExp = new RegExp('.*' + search + '.*', 'i');
+    if (search) {
+      filter.$or = [
+        { fullName: searchRegExp },
+        { email: searchRegExp },
+        { phoneNumber: searchRegExp },
+      ]
+    }
+    const options = { page, limit };
+    const { userList, pagination } = await getAllUsers(filter, options);
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-list'), data: { userList, pagination } }));
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers }

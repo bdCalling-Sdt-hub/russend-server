@@ -21,8 +21,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: [true, 'Password must be given'], set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
   image: {
     type: Object, required: false, default: {
-      publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/user.png`,
-      path: 'public\\uploads\\users\\user.png'
+      publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/user.jpg`,
+      path: 'public\\uploads\\users\\user.jpg'
     }
   },
   role: { type: String, enum: ['user', 'admin', 'worker'], default: 'user' },

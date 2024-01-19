@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
+  transactionId: { type: String, required: false },
   firstName: { type: String, required: [true, 'First Name is must be given'], trim: true },
   lastName: { type: String, required: [true, 'Last Name is must be given'], trim: true },
   phoneNumber: { type: String, required: true, trim: true },
@@ -11,7 +12,8 @@ const transactionSchema = new mongoose.Schema({
   exchangeRate: { type: Number, required: true, trim: true },
   hiddenFees: { type: Number, required: true, trim: true },
   paymentMethod: { type: String, required: true, trim: true },
-  sender:{type:mongoose.Schema.Types.ObjectId,ref:'User'},
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  country: { type: mongoose.Schema.Types.ObjectId, ref: 'Country' },
   status: { type: String, enum: ['accepted', 'pending', 'transferred', 'cancelled'], default: 'pending' },
 }, { timestamps: true }
 );

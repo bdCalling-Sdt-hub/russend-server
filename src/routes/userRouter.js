@@ -1,5 +1,5 @@
 const express = require('express');
-const { signUp, signIn, addWorker, getUsers, getWorkers, userDetails, forgetPassword, verifyForgetPasswordOTP, resetPassword, addPasscode, verifyPasscode, changePassword, blockUser, unBlockUser, signInWithPasscode, signInWithRefreshToken, updateProfile } = require('../controllers/userController');
+const { signUp, signIn, addWorker, getUsers, getWorkers, userDetails, forgetPassword, verifyForgetPasswordOTP, resetPassword, addPasscode, verifyPasscode, changePassword, blockUser, unBlockUser, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers } = require('../controllers/userController');
 const router = express.Router();
 const fs = require('fs');
 const userFileUploadMiddleware = require("../middlewares/fileUpload");
@@ -18,8 +18,6 @@ if (!fs.existsSync(UPLOADS_FOLDER_USERS)) {
           console.log("Uploads folder created successfully");
       }
   });
-} else {
-  console.log("Uploads folder already exists");
 }
 
 //Sign-up user
@@ -35,6 +33,7 @@ router.post('/reset-password', resetPassword);
 router.get('/', isValidUser, getUsers);
 router.post('/workers', isValidUser, addWorker);
 router.get('/workers', isValidUser, getWorkers)
+router.get('/block-user', isValidUser, getBlockedUsers)
 router.patch('/block-user/:id', isValidUser, blockUser);
 router.patch('/unblock-user/:id', isValidUser, unBlockUser);
 router.get('/:id', isValidUser, userDetails);

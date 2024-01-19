@@ -4,7 +4,7 @@ const logger = require('../../helpers/logger');
 
 const validateTransaction = async (req, res, next) => {
   try {
-    const { firstName, lastName, phoneNumber, amountToSent, ammountToSentCurrency, amountToReceive, amountToReceiveCurrency, exchangeRate, hiddenFees, paymentMethod,  } = req.body;
+    const { firstName, lastName, phoneNumber, amountToSent, ammountToSentCurrency, amountToReceive, amountToReceiveCurrency, exchangeRate, hiddenFees, paymentMethod, country  } = req.body;
     let errors = [];
 
     if (!firstName) {
@@ -36,6 +36,9 @@ const validateTransaction = async (req, res, next) => {
     }
     if (!paymentMethod) {
       errors.push({ field: 'paymentMethod', message: req.t('paymentMethod-required') });
+    }
+    if (!country) {
+      errors.push({ field: 'country', message: req.t('country-required') });
     }
     if (Object.keys(errors).length !== 0) {
       logger.error('Sign up validation error', req.originalUrl);
