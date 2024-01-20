@@ -107,7 +107,7 @@ const signIn = async (req, res) => {
 
     const user = await login(email, password);
 
-    if (user && !user.isBlocked) {
+    if (user && !user?.isBlocked) {
       var token;
       var refreshToken;
       var passcodeToken;
@@ -127,10 +127,9 @@ const signIn = async (req, res) => {
 
       return res.status(200).json(response({ statusCode: 200, message: req.t('login-success'), status: "OK", type: "user", data: user, accessToken: token, refreshToken: refreshToken, passcodeToken: passcodeToken }));
     }
-    else if (user && user.isBlocked) {
+    else if (user && user?.isBlocked) {
       return res.status(401).json(response({ statusCode: 200, message: req.t('blocked-user'), status: "OK" }));
     }
-    console.log('User is blocked', user.isBlocked);
     return res.status(401).json(response({ statusCode: 200, message: req.t('login-failed'), status: "OK" }));
 
   } catch (error) {
@@ -147,7 +146,7 @@ const signInWithRefreshToken = async (req, res) => {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
     const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, token: accessToken }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, accessToken: accessToken }));
   } catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)

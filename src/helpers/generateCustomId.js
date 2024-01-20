@@ -18,7 +18,6 @@ async function generateCustomID() {
       randomDigits = '001';
     }
     const customID = `#${year+month+day}-${randomDigits}`;
-    console.log('Custom ID: ',customID);
     return customID;
   }
   catch (err) {
