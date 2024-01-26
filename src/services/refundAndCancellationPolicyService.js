@@ -2,7 +2,7 @@ const RefundAndCancellationPolicy = require('../models/RefundAndCancellationPoli
 
 const addRefundAndCancellationPolicy = async (refundAndCancellationPolicyBody) => {
   try {
-    var refundAndCancellationPolicy = await findRefundAndCancellationPolicy(refundAndCancellationPolicyBody);
+    var refundAndCancellationPolicy = await findRefundAndCancellationPolicy();
     if (refundAndCancellationPolicy) {
       refundAndCancellationPolicy.content = refundAndCancellationPolicyBody.content;
     }
@@ -16,9 +16,9 @@ const addRefundAndCancellationPolicy = async (refundAndCancellationPolicyBody) =
   }
 }
 
-const findRefundAndCancellationPolicy = async (refundAndCancellationPolicyBody) => {
+const findRefundAndCancellationPolicy = async () => {
   try {
-    const refundAndCancellationPolicy = await RefundAndCancellationPolicy.findOne({content: refundAndCancellationPolicyBody.content});
+    const refundAndCancellationPolicy = await RefundAndCancellationPolicy.findOne();
     return refundAndCancellationPolicy;
   } catch (error) {
     throw error;

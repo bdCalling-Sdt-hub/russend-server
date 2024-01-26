@@ -1,5 +1,6 @@
 const OTP = require('../models/OTP');
 const emailWithNodemailer = require('../helpers/email');
+require('dotenv').config();
 
 const sendOTP = async (name, sentTo, receiverType, purpose) => {
   try {
@@ -27,7 +28,7 @@ const sendOTP = async (name, sentTo, receiverType, purpose) => {
         html: `
           <h1>Hello, ${name}</h1>
           <p>Your One Time Code is <h3>${otp}</h3> to verify your account</p>
-          <small>This Code is valid for 3 minutes</small>
+          <small>This Code is valid for ${process.env.OTP_EXPIRY_TIME}minutes</small>
         `
       }
       await emailWithNodemailer(emailData);
@@ -49,8 +50,7 @@ const checkOTPByEmail = async (sentTo) => {
 
 const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
   try {
-    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, expiredAt: { $gt: new Date()}, status:{$eq:"pending"} })
-    console.log('data---------->',otpData);
+    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, expiredAt: { $gt: new Date() }, status: { $eq: "pending" }, verifiedAt: { $eq: null } })
     if (!otpData) {
       return null;
     }
@@ -65,10 +65,10 @@ const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
 }
 
 const checkOTPValidity = (sentTo) => {
-  return OTP.findOne({ sentTo: sentTo, expiredAt:{$gt: new Date()}, status: 'verified' })
+  return OTP.findOne({ sentTo: sentTo, expiredAt: { $gt: new Date() }, status: 'verified' })
 }
 
-const updateOTP = async (otpId,otpBody) => {
+const updateOTP = async (otpId, otpBody) => {
   try {
     const otpData = await OTP.findById(otpId);
     if (!otpData) {

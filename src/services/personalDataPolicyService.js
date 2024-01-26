@@ -2,7 +2,7 @@ const PersonalDataPolicy = require('../models/PersonalDataPolicy');
 
 const addPersonalDataPolicy = async (personalDataPolicyBody) => {
   try {
-    var personalDataPolicy = await findPersonalDataPolicy(personalDataPolicyBody);
+    var personalDataPolicy = await findPersonalDataPolicy();
     if (personalDataPolicy) {
       personalDataPolicy.content = personalDataPolicyBody.content;
     }
@@ -16,9 +16,9 @@ const addPersonalDataPolicy = async (personalDataPolicyBody) => {
   }
 }
 
-const findPersonalDataPolicy = async (personalDataPolicyBody) => {
+const findPersonalDataPolicy = async () => {
   try {
-    const personalDataPolicy = await PersonalDataPolicy.findOne({content: personalDataPolicyBody.content});
+    const personalDataPolicy = await PersonalDataPolicy.findOne();
     return personalDataPolicy;
   } catch (error) {
     throw error;

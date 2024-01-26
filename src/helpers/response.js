@@ -4,21 +4,29 @@ const response = (response = {}) => {
         "statusCode": response.statusCode,
         "message": response.message,
         "data": {},
-        "errors":[]
+        "errors": []
     };
-
     if (response.type) {
         responseObject.data.type = response.type;
     }
-
     if (response.data) {
         responseObject.data.attributes = response.data;
     }
-
-    if (response.token) {
-        responseObject.data.token = response.token;
+    if (response.accessToken) {
+        responseObject.data.accessToken = response.accessToken;
     }
-
+    if (response.refreshToken) {
+        responseObject.data.refreshToken = response.refreshToken;
+    }
+    if(response.passcodeToken) {
+        responseObject.data.passcodeToken = response.passcodeToken;
+    }
+    if(response.forgetPasswordToken) {
+        responseObject.data.forgetPasswordToken = response.forgetPasswordToken;
+    }
+    if(response.path) {
+        responseObject.data.path = response.path;
+    }
     if (response.errors) {
         responseObject.errors = response.errors;
     }

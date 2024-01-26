@@ -2,7 +2,7 @@ const TermsOfMoneyTransfer = require('../models/TermsOfMoneyTransfer');
 
 const addTermsOfMoneyTransfer = async (termsOfMoneyTransferBody) => {
   try {
-    var termsOfMoneyTransfer = await findTermsOfMoneyTransfer(termsOfMoneyTransferBody);
+    var termsOfMoneyTransfer = await findTermsOfMoneyTransfer();
     if (termsOfMoneyTransfer) {
       termsOfMoneyTransfer.content = termsOfMoneyTransferBody.content;
     }
@@ -16,9 +16,9 @@ const addTermsOfMoneyTransfer = async (termsOfMoneyTransferBody) => {
   }
 }
 
-const findTermsOfMoneyTransfer = async (termsOfMoneyTransferBody) => {
+const findTermsOfMoneyTransfer = async () => {
   try {
-    const termsOfMoneyTransfer = await TermsOfMoneyTransfer.findOne({content: termsOfMoneyTransferBody.content});
+    const termsOfMoneyTransfer = await TermsOfMoneyTransfer.findOne();
     return termsOfMoneyTransfer;
   } catch (error) {
     throw error;

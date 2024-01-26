@@ -15,13 +15,12 @@ function validatePassword(password) {
 
 const validationMiddleware = async (req, res, next) => {
   try {
-    const { fullName, email, phoneNumber, password, role } = req.body;
+    const { fullName, email, phoneNumber, password } = req.body;
     let errors = [];
-    console.log(req.body);
 
     const user = await User.findOne({ email });
     if (user) {
-      return res.status(409).json(response({ status: 'Error', statusCode: '409', type: "sign-up", message: req.t('user-exists') }));
+      req.body.existingUser = user;
     }
 
     if (!fullName) {
@@ -39,10 +38,7 @@ const validationMiddleware = async (req, res, next) => {
     if (!validatePassword(password)) {
       errors.push({ field: 'password', message: req.t('password-format-error') });
     }
-
-    if (!role) {
-      errors.push({ field: 'role', message: req.t('role-required') });
-    }
+    
     if (Object.keys(errors).length !== 0) {
       logger.error('Sign up validation error', 'sign-up middleware');
       return res.status(422).json(response({ status: 'Error', statusCode: '422', type: "sign-up", message: req.t('validation-error'), errors: errors }));
