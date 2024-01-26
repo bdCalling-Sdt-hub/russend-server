@@ -16,11 +16,8 @@ const getAllNotifications = async (req, res) => {
     var filter = {};
     if (role === 'user') {
       filter.receiver = req.body.userId;
-      filter.role = role;
     }
-    else {
-      filter.role = role;
-    }
+    filter.role = { $in: role };
     const { notificationList, pagination } = await getNotifications(filter, options);
     return res.status(200).json(response({ status: 'Success', statusCode: '200', message: req.t('notification-list'), data: { notificationList, pagination } }));
   }
@@ -40,14 +37,14 @@ const getNotificationDetails = async (req, res) => {
     }
     var data;
     const path = notification.type;
-    if (path === 'transaction') {
+    if (path === 'Transaction') {
       data = await transactionDetailsById(notification.linkId);
     }
     if (path === 'user') {
       data = await getUserById(notification.linkId);
     }
     if (!data) {
-      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'transaction', message: req.t('notification-details-not-found') }));
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'Transaction', message: req.t('notification-details-not-found') }));
     }
     return res.status(200).json(response({ status: 'Success', statusCode: '200', message: req.t('notification-details'), data: data, path: path }));
   }

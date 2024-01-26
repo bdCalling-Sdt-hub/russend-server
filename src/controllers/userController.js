@@ -74,10 +74,10 @@ const signUp = async (req, res) => {
           message: message,
           linkId: registeredUser._id,
           type: 'user',
-          role: 'admin',
+          role: ['admin'],
         }
         const sendNotification = await addNotification(notification);
-        io.emit('russend-admin-notification', sendNotification)
+        io.emit('russend-admin-notification', {status:1008, message: sendNotification.message})
         message = req.t('user-verified');
         passcodeToken = crypto.randomBytes(32).toString('hex');
       }
@@ -102,7 +102,7 @@ const signIn = async (req, res) => {
     //Get email password from req.body
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json(response({ statusCode: 200, message: req.t('login-credentials-required'), status: "OK" }));
+      return res.status(400).json(response({ statusCode: '200', message: req.t('login-credentials-required'), status: "OK" }));
     }
 
     const user = await login(email, password);
@@ -125,17 +125,17 @@ const signIn = async (req, res) => {
         refreshToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
       }
 
-      return res.status(200).json(response({ statusCode: 200, message: req.t('login-success'), status: "OK", type: "user", data: user, accessToken: token, refreshToken: refreshToken, passcodeToken: passcodeToken }));
+      return res.status(200).json(response({ statusCode: '200', message: req.t('login-success'), status: "OK", type: "user", data: user, accessToken: token, refreshToken: refreshToken, passcodeToken: passcodeToken }));
     }
     else if (user && user?.isBlocked) {
-      return res.status(401).json(response({ statusCode: 200, message: req.t('blocked-user'), status: "OK" }));
+      return res.status(401).json(response({ statusCode: '200', message: req.t('blocked-user'), status: "OK" }));
     }
-    return res.status(401).json(response({ statusCode: 200, message: req.t('login-failed'), status: "OK" }));
+    return res.status(401).json(response({ statusCode: '200', message: req.t('login-failed'), status: "OK" }));
 
   } catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t(error), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t(error), status: "Error" }));
   }
 };
 
@@ -146,11 +146,11 @@ const signInWithRefreshToken = async (req, res) => {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
     const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, accessToken: accessToken }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), accessToken: accessToken }));
   } catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 };
 
@@ -170,7 +170,7 @@ const forgetPassword = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -197,7 +197,7 @@ const verifyForgetPasswordOTP = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -232,7 +232,7 @@ const resetPassword = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -240,7 +240,7 @@ const addWorker = async (req, res) => {
   try {
     const { fullName, email, phoneNumber, country } = req.body;
     if (req.body.userRole !== 'admin') {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
@@ -291,20 +291,21 @@ const addWorker = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
 const getUsers = async (req, res) => {
   try {
     if (req.body.userRole !== 'admin') {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
 
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const filter = {
-      role: 'user'
+      role: 'user',
+      isBlocked: false
     };
     const search = req.query.search;
     const searchRegExp = new RegExp('.*' + search + '.*', 'i');
@@ -322,19 +323,20 @@ const getUsers = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
 const getWorkers = async (req, res) => {
   try {
     if (req.body.userRole !== 'admin') {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const filter = {
-      role: 'worker'
+      role: 'worker',
+      isBlocked: false
     };
     const search = req.query.search;
     const searchRegExp = new RegExp('.*' + search + '.*', 'i');
@@ -352,7 +354,7 @@ const getWorkers = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -360,12 +362,12 @@ const userDetails = async (req, res) => {
   try {
     const id = req.params.id;
     const userDetails = await getUserById(id);
-    return res.status(200).json(response({ statusCode: 200, message: req.t('user-details'), data: userDetails, status: "OK" }));
+    return res.status(200).json(response({ statusCode: '200', message: req.t('user-details'), data: userDetails, status: "OK" }));
   }
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -395,7 +397,7 @@ const addPasscode = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 
 }
@@ -411,8 +413,10 @@ const verifyPasscode = async (req, res) => {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('invalid-token') }));
     }
     const { passcode } = req.body;
-    console.log(tokenData.userId.email, passcode);
     const user = await loginWithPasscode(tokenData.userId.email, passcode);
+    if(!user){
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-passcode') }));
+    }
     const accessToken = jwt.sign({ _id: tokenData.userId._id, email: tokenData.userId.email, role: tokenData.userId.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
     const refreshToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
     await deleteToken(tokenData._id);
@@ -421,14 +425,14 @@ const verifyPasscode = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t(error.message), status: "OK" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t(error.message), status: "OK" }));
   }
 }
 
 const blockUser = async (req, res) => {
   try {
     if (req.body.userRole !== 'admin') {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
     const existingUser = await getUserById(req.params.id);
     if (!existingUser) {
@@ -446,14 +450,14 @@ const blockUser = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
   }
 }
 
 const unBlockUser = async (req, res) => {
   try {
     if (req.body.userRole !== 'admin') {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
     const existingUser = await getUserById(req.params.id);
     if (!existingUser) {
@@ -470,7 +474,7 @@ const unBlockUser = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -483,7 +487,7 @@ const changePassword = async (req, res) => {
     }
     const verifyUser = await login(req.body.userEmail, oldPassword);
     if (!verifyUser) {
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('user-not-exists') }));
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('password-invalid') }));
     }
     verifyUser.password = newPassword;
     await verifyUser.save();
@@ -492,7 +496,7 @@ const changePassword = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -500,12 +504,12 @@ const signInWithPasscode = async (req, res) => {
   try {
     const { email, passcode } = req.body;
     if (!email || !passcode) {
-      return res.status(400).json(response({ statusCode: 200, message: req.t('login-credentials-required'), status: "OK" }));
+      return res.status(400).json(response({ statusCode: '200', message: req.t('login-credentials-required'), status: "OK" }));
     }
 
     const user = await loginWithPasscode(email, passcode);
     if (!user || (user && user.role !== 'user') || (user && user.isBlocked)) {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
     const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), accessToken: accessToken }));
@@ -513,7 +517,7 @@ const signInWithPasscode = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
   }
 }
 
@@ -539,14 +543,14 @@ const updateProfile = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 500, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
   }
 }
 
 const getBlockedUsers = async (req, res) => {
   try {
     if (req.body.userRole !== 'admin') {
-      return res.status(401).json(response({ statusCode: 401, message: req.t('unauthorised'), status: "Error" }));
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
 
     const page = Number(req.query.page) || 1;
@@ -570,8 +574,64 @@ const getBlockedUsers = async (req, res) => {
   catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
-    return res.status(500).json(response({ statusCode: 200, message: req.t('server-error'), status: "Error" }));
+    return res.status(500).json(response({ statusCode: '200', message: req.t('server-error'), status: "Error" }));
   }
 }
 
-module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers }
+const verifyOldPasscode = async (req, res) => {
+  try {
+    const { passcode } = req.body;
+    const user = await getUserById(req.body.userId);
+    if (req.body.userRole !== 'user') {
+      return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('unauthorised') }));
+    }
+    const verifyUser = await loginWithPasscode(req.body.userEmail, passcode);
+    var passcodeToken;
+    if(verifyUser){
+      passcodeToken = crypto.randomBytes(32).toString('hex');
+      const data = {
+        token: passcodeToken,
+        userId: user._id,
+        purpose: 'passcode-verification',
+      }
+      await addToken(data);
+      return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-verified'), passcodeToken: passcodeToken }));
+    }
+    return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-passcode') }));
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+const changePasscode = async (req, res) => {
+  try {
+    var forgetPasswordToken
+    if (req.headers['pass-code'] && req.headers['pass-code'].startsWith('Pass-code ')) {
+      forgetPasswordToken = req.headers['pass-code'].split(' ')[1];
+    }
+    if (!forgetPasswordToken) {
+      return res.status(401).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('unauthorised') }));
+    }
+
+    const tokenData = await verifyToken(forgetPasswordToken, 'passcode-verification');
+    const { newPasscode } = req.body;
+    if (!tokenData) {
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('unauthorised') }));
+    }
+    const user = await getUserById(req.body.userId);
+    user.passcode = newPasscode;
+    await user.save();
+    deleteToken(tokenData._id);
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-changed'), data: user }));
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers, changePasscode, verifyOldPasscode }

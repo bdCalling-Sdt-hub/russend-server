@@ -2,7 +2,7 @@ const TermsOfService = require('../models/TermsOfService');
 
 const addTermsOfService = async (termsOfServiceBody) => {
   try {
-    var termsOfService = await findTermsOfService(termsOfServiceBody);
+    var termsOfService = await findTermsOfService();
     if (termsOfService) {
       termsOfService.content = termsOfServiceBody.content;
     }
@@ -16,9 +16,9 @@ const addTermsOfService = async (termsOfServiceBody) => {
   }
 }
 
-const findTermsOfService = async (termsOfServiceBody) => {
+const findTermsOfService = async () => {
   try {
-    const termsOfService = await TermsOfService.findOne({content: termsOfServiceBody.content});
+    const termsOfService = await TermsOfService.findOne();
     return termsOfService;
   } catch (error) {
     throw error;

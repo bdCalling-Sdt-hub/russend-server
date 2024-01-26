@@ -4,13 +4,23 @@ const addHiddenFee = async (hiddenFeeBody) => {
   try {
     var hiddenFee = await findHiddenFee();
     if (hiddenFee) {
-      hiddenFee.isActive = hiddenFeeBody.isActive;
-      hiddenFee.percentage = hiddenFeeBody.percentage;
+      if(hiddenFeeBody?.isActive!==null){
+        hiddenFee.isActive = hiddenFeeBody.isActive;
+      }
+      if(hiddenFeeBody?.percentage!==null){
+        hiddenFee.percentage = hiddenFeeBody.percentage;
+      }
     }
     else {
-      hiddenFee = new HiddenFee(hiddenFeeBody);
+      if(hiddenFeeBody?.isActive!==null){
+        hiddenFee.isActive = hiddenFeeBody.isActive;
+      }
+      if(hiddenFeeBody?.percentage!==null){
+        hiddenFee.percentage = hiddenFeeBody.percentage;
+      }
     }
     await hiddenFee.save();
+    console.log(hiddenFee);
     return hiddenFee;
   } catch (error) {
     throw error;
@@ -28,7 +38,7 @@ const findHiddenFee = async () => {
 
 const getHiddenFee = async () => {
   try {
-    return await HiddenFee.findOne({isActive:true});
+    return await HiddenFee.findOne();
   }
   catch (error) {
     throw error;

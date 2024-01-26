@@ -1,5 +1,5 @@
 const express = require('express');
-const { signUp, signIn, addWorker, getUsers, getWorkers, userDetails, forgetPassword, verifyForgetPasswordOTP, resetPassword, addPasscode, verifyPasscode, changePassword, blockUser, unBlockUser, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers } = require('../controllers/userController');
+const { signUp, signIn, addWorker, getUsers, getWorkers, userDetails, forgetPassword, verifyForgetPasswordOTP, resetPassword, addPasscode, verifyPasscode, changePassword, blockUser, unBlockUser, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers, changePasscode, verifyOldPasscode } = require('../controllers/userController');
 const router = express.Router();
 const fs = require('fs');
 const userFileUploadMiddleware = require("../middlewares/fileUpload");
@@ -26,6 +26,7 @@ router.post('/passcode', addPasscode);
 router.post('/sign-in', signIn);
 router.post('/sign-in-with-passcode', signInWithPasscode);
 router.get('/sign-in-with-refresh-token', verifyRefreshToken, signInWithRefreshToken);
+router.post('/verify-old-passcode', isValidUser, verifyOldPasscode);
 router.post('/verify-passcode', verifyPasscode);
 router.post('/forget-password', forgetPassword);
 router.post('/verify-otp', verifyForgetPasswordOTP);
@@ -38,6 +39,7 @@ router.patch('/block-user/:id', isValidUser, blockUser);
 router.patch('/unblock-user/:id', isValidUser, unBlockUser);
 router.get('/:id', isValidUser, userDetails);
 router.patch('/change-password', isValidUser, changePassword);
+router.patch('/change-passcode', isValidUser, changePasscode);
 router.put('/', [uploadUsers.single("image")], isValidUser, updateProfile);
 
 module.exports = router;

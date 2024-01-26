@@ -17,7 +17,6 @@ const validationMiddleware = async (req, res, next) => {
   try {
     const { fullName, email, phoneNumber, password } = req.body;
     let errors = [];
-    console.log(req.body);
 
     const user = await User.findOne({ email });
     if (user) {
