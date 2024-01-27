@@ -52,7 +52,8 @@ const transactionCounts = async () => {
     const totalTransactions = await Transaction.countDocuments();
     const approvedTransactions = await Transaction.countDocuments({ status: 'accepted' });
     const pendingTransactions = await Transaction.countDocuments({ status: 'pending' });
-    return { totalTransactions, approvedTransactions, pendingTransactions };
+    const transferredTransactions = await Transaction.countDocuments({ status: 'transferred' });
+    return { totalTransactions, approvedTransactions, transferredTransactions, pendingTransactions };
   }
   catch (error) {
     throw error;
@@ -65,7 +66,7 @@ const transactionChart = async (year) => {
     const yearEndDate = new Date(year + 1, 0, 1);
     const allTransactions = await Transaction.find({
       createdAt: { $gte: yearStartDate, $lt: yearEndDate },
-      status: "accepted"
+      status: {$in:["accepted", "transferred"]}
     });
 
     const monthNames = [

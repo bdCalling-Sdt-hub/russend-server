@@ -1,20 +1,13 @@
 const fs = require("fs");
 
-function unlinkImages(imagePaths) {
-  if (typeof imagePaths === "string") {
-    // If it's a single image path, convert it to an array
-    imagePaths = [imagePaths];
+async function unlinkImage(imagePath) {
+  console.log('imagePath', imagePath);
+  try {
+    await fs.promises.unlink(imagePath);
+    console.log(`File ${imagePath} deleted successfully`);
+  } catch (err) {
+    console.error(`Error deleting the file ${imagePath}:`, err);
   }
-
-  imagePaths.forEach((imagePath) => {
-    fs.unlink(imagePath, (err) => {
-      if (err) {
-        console.error(`Error deleting the file ${imagePath}:`, err);
-      } else {
-        console.log(`File ${imagePath} deleted successfully`);
-      }
-    });
-  });
 }
 
-module.exports = unlinkImages
+module.exports = unlinkImage
