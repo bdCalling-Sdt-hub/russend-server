@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   image: {
     type: Object, required: false, default: {
       publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/user.jpg`,
-      path: 'public\\uploads\\users\\user.jpg'
+      path: 'public\\uploads\\users\\user.png'
     }
   },
   role: { type: String, enum: ['user', 'admin', 'worker'], default: 'user' },

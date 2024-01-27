@@ -3,7 +3,7 @@ const response = require("../helpers/response");
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 //defining unlinking image function 
-const unlinkImages = require('../common/image/unlinkImage')
+const unlinkImage = require('../common/image/unlinkImage')
 const logger = require("../helpers/logger");
 const { addUser, login, getUserByEmail, getAllUsers, getUserById, updateUser, loginWithPasscode } = require('../services/userService')
 const { sendOTP, checkOTPByEmail, verifyOTP, checkOTPValidity, updateOTP } = require('../services/otpService');
@@ -11,6 +11,7 @@ const { addNotification } = require('../services/notificationService');
 const { addToken, verifyToken, deleteToken } = require('../services/tokenService');
 const emailWithNodemailer = require('../helpers/email');
 const crypto = require('crypto');
+const User = require('../models/User');
 
 function validatePassword(password) {
   const hasNumber = /\d/.test(password);
@@ -531,14 +532,18 @@ const updateProfile = async (req, res) => {
     user.fullName = !fullName ? user.fullName : fullName;
     user.phoneNumber = !phoneNumber ? user.phoneNumber : phoneNumber;
     if (req.file) {
-      if (user.image.path !== 'public\\uploads\\users\\user.png') {
-        unlinkImages(user.image.path);
+      const defaultPath = 'public\\uploads\\users\\user.png';
+      console.log('req.file', req.file, user.image.path, defaultPath);
+      if (user.image.path !== defaultPath) {
+        await unlinkImage(user.image.path);
       }
-      user.image.publicFileUrl = `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/${req.file.filename}`;
-      user.image.path = req.file.path;
+      user.image={
+        publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/${req.file.filename}`,
+        path: req.file.path
+      }
     }
-    await user.save();
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-updated'), data: user }));
+    const updatedUser = await user.save();
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-updated'), data: updatedUser }));
   }
   catch (error) {
     console.error(error);

@@ -20,7 +20,6 @@ const addHiddenFee = async (hiddenFeeBody) => {
       }
     }
     await hiddenFee.save();
-    console.log(hiddenFee);
     return hiddenFee;
   } catch (error) {
     throw error;
