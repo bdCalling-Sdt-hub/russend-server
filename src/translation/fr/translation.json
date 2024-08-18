@@ -83,5 +83,10 @@
   "notification-not-found": "Notification introuvable",
   "password-invalid": "Le mot de passe est incorrect, veuillez réessayer avec un valide",
   "hiddenFee-added": "Frais cachés mis à jour avec succès",
-  "invalid-passcode": "Le code d'accès est incorrect, veuillez réessayer avec un valide"
+  "invalid-passcode": "Le code d'accès est incorrect, veuillez réessayer avec un valide",
+  "transaction-confirmed": "Transaction confirmée avec succès",
+  "transaction-already-confirmed": "La transaction est déjà confirmée",
+  "transaction-cancelled": "La transaction a déjà été annulée par l'administrateur",
+  "user-deleted": "L'utilisateur a été supprimé avec succès",
+  "email-already-exists":"Utilisateur avec ce courriel existe déjà"
 }

@@ -5,13 +5,15 @@ require('dotenv').config();
 //defining unlinking image function 
 const unlinkImage = require('../common/image/unlinkImage')
 const logger = require("../helpers/logger");
-const { addUser, login, getUserByEmail, getAllUsers, getUserById, updateUser, loginWithPasscode } = require('../services/userService')
-const { sendOTP, checkOTPByEmail, verifyOTP, checkOTPValidity, updateOTP } = require('../services/otpService');
+const { addUser, login, getUserByEmail, getAllUsers, getUserById, loginWithPasscode, deleteUser } = require('../services/userService')
+const { sendOTP, checkOTPByEmail, verifyOTP } = require('../services/otpService');
 const { addNotification } = require('../services/notificationService');
 const { addToken, verifyToken, deleteToken } = require('../services/tokenService');
 const emailWithNodemailer = require('../helpers/email');
 const crypto = require('crypto');
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
+const Notification = require('../models/Notification');
 
 function validatePassword(password) {
   const hasNumber = /\d/.test(password);
@@ -24,12 +26,7 @@ function validatePassword(password) {
 const signUp = async (req, res) => {
   try {
     var otpPurpose = 'email-verification';
-    var existingUser = false;
-    if (req.body.existingUser) {
-      existingUser = true;
-      otpPurpose = 'passcode-verification';
-    }
-    var { fullName, email, phoneNumber, password, country } = req.body;
+    var { fullName, email, phoneNumber, password, country, countryCode, countryISO } = req.body;
     var otp
     if (req.headers['otp'] && req.headers['otp'].startsWith('OTP ')) {
       otp = req.headers['otp'].split(' ')[1];
@@ -50,48 +47,42 @@ const signUp = async (req, res) => {
       if (!otpData) {
         return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-otp') }));
       }
-      var passcodeToken;
-      var registeredUser;
-      var message
-      if (existingUser) {
-        registeredUser = req.body.existingUser;
-        passcodeToken = crypto.randomBytes(32).toString('hex');
-        message = req.t('user-reregistered');
+      const userData = {
+        fullName: fullName,
+        email: email,
+        phoneNumber: phoneNumber,
+        password: password,
+        countryCode: countryCode,
+        countryISO: countryISO,
+        role: "user",
       }
-      else {
-        const userData = {
-          fullName: fullName,
-          email: email,
-          phoneNumber: phoneNumber,
-          password: password,
-          role: "user",
-        }
-        if (country) {
-          userData.country = country;
-        }
-        registeredUser = await addUser(userData);
-        var message = "New user registered named " + fullName;
-        const notification = {
-          message: message,
-          linkId: registeredUser._id,
-          type: 'user',
-          role: ['admin'],
-        }
-        const sendNotification = await addNotification(notification);
-        io.emit('russend-admin-notification', {status:1008, message: sendNotification.message})
-        message = req.t('user-verified');
-        passcodeToken = crypto.randomBytes(32).toString('hex');
+      if (country) {
+        userData.country = country;
       }
+      const registeredUser = await addUser(userData);
+      const notifMessage = "New user registered named " + fullName;
+      const notification = {
+        message: notifMessage,
+        linkId: registeredUser._id,
+        type: 'user',
+        role: ['admin'],
+      }
+      const sendNotification = await addNotification(notification);
+      io.emit('russend-admin-notification', { status: 1008, message: sendNotification.message })
+
+      const passcodeToken = crypto.randomBytes(32).toString('hex');
+
       const data = {
         token: passcodeToken,
         userId: registeredUser._id,
         purpose: 'passcode-verification',
       }
       await addToken(data);
-      return res.status(201).json(response({ status: 'OK', statusCode: '201', type: 'user', message: message, data: registeredUser, passcodeToken: passcodeToken }));
+      return res.status(201).json(response({ status: 'OK', statusCode: '201', type: 'user', message: req.t('user-verified'), data: registeredUser, passcodeToken: passcodeToken }));
     }
   } catch (error) {
     console.error(error);
+    console.log(error)
     logger.error(error, req.originalUrl)
     return res.status(500).json(response({ status: 'Error', statusCode: '500', type: 'user', message: req.t('server-error') }));
   }
@@ -107,7 +98,6 @@ const signIn = async (req, res) => {
     }
 
     const user = await login(email, password);
-
     if (user && !user?.isBlocked) {
       var token;
       var refreshToken;
@@ -128,7 +118,7 @@ const signIn = async (req, res) => {
 
       return res.status(200).json(response({ statusCode: '200', message: req.t('login-success'), status: "OK", type: "user", data: user, accessToken: token, refreshToken: refreshToken, passcodeToken: passcodeToken }));
     }
-    else if (user && user?.isBlocked) {
+    if (user && user?.isBlocked) {
       return res.status(401).json(response({ statusCode: '200', message: req.t('blocked-user'), status: "OK" }));
     }
     return res.status(401).json(response({ statusCode: '200', message: req.t('login-failed'), status: "OK" }));
@@ -147,7 +137,7 @@ const signInWithRefreshToken = async (req, res) => {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
     const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), accessToken: accessToken }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, accessToken: accessToken }));
   } catch (error) {
     console.error(error);
     logger.error(error, req.originalUrl)
@@ -393,7 +383,9 @@ const addPasscode = async (req, res) => {
     }
     userData.passcode = passcode;
     await userData.save();
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-added'), data: userData }));
+    const accessToken = jwt.sign({ _id: tokenData.userId._id, email: tokenData.userId.email, role: tokenData.userId.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
+    const refreshToken = jwt.sign({ _id: userData._id, email: userData.email, role: userData.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-added'), data: userData, accessToken: accessToken, refreshToken: refreshToken }));
   }
   catch (error) {
     console.error(error);
@@ -415,13 +407,13 @@ const verifyPasscode = async (req, res) => {
     }
     const { passcode } = req.body;
     const user = await loginWithPasscode(tokenData.userId.email, passcode);
-    if(!user){
+    if (!user) {
       return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'user', message: req.t('invalid-passcode') }));
     }
-    const accessToken = jwt.sign({ _id: tokenData.userId._id, email: tokenData.userId.email, role: tokenData.userId.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
+    const accessToken = jwt.sign({ _id: tokenData.userId._id, email: tokenData.userId.email, role: tokenData.userId.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
     const refreshToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '5y' });
     await deleteToken(tokenData._id);
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-verfied'), accessToken: accessToken, refreshToken: refreshToken }));
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('passcode-verfied'), data: user, accessToken: accessToken, refreshToken: refreshToken }));
   }
   catch (error) {
     console.error(error);
@@ -444,6 +436,9 @@ const blockUser = async (req, res) => {
     }
     existingUser.isBlocked = true;
     existingUser.save();
+
+    const eventName = 'blocked-user::'+existingUser._id.toString()
+    io.emit(eventName,{statusCode:1000, message:"You have been blocked by the admin"})
 
     return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('user-blocked'), data: existingUser }));
 
@@ -512,8 +507,8 @@ const signInWithPasscode = async (req, res) => {
     if (!user || (user && user.role !== 'user') || (user && user.isBlocked)) {
       return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
     }
-    const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30d' });
-    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), accessToken: accessToken }));
+    const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1d' });
+    return res.status(200).json(response({ status: 'OK', statusCode: '200', type: 'user', message: req.t('login-success'), data: user, accessToken: accessToken }));
   }
   catch (error) {
     console.error(error);
@@ -524,20 +519,22 @@ const signInWithPasscode = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, phoneNumber } = req.body;
+    const { fullName, phoneNumber, countryCode, countryISO } = req.body;
     const user = await getUserById(req.body.userId);
     if (!user) {
       return res.status(404).json(response({ status: 'Error', statusCode: '404', type: 'user', message: req.t('user-not-exists') }));
     }
     user.fullName = !fullName ? user.fullName : fullName;
     user.phoneNumber = !phoneNumber ? user.phoneNumber : phoneNumber;
+    user.countryCode = !countryCode ? user.countryCode : countryCode;
+    user.countryISO = !countryISO ? user.countryISO : countryISO;
     if (req.file) {
       const defaultPath = 'public\\uploads\\users\\user.png';
       console.log('req.file', req.file, user.image.path, defaultPath);
       if (user.image.path !== defaultPath) {
         await unlinkImage(user.image.path);
       }
-      user.image={
+      user.image = {
         publicFileUrl: `${process.env.IMAGE_UPLOAD_BACKEND_DOMAIN}/uploads/users/${req.file.filename}`,
         path: req.file.path
       }
@@ -592,7 +589,7 @@ const verifyOldPasscode = async (req, res) => {
     }
     const verifyUser = await loginWithPasscode(req.body.userEmail, passcode);
     var passcodeToken;
-    if(verifyUser){
+    if (verifyUser) {
       passcodeToken = crypto.randomBytes(32).toString('hex');
       const data = {
         token: passcodeToken,
@@ -639,4 +636,25 @@ const changePasscode = async (req, res) => {
   }
 }
 
-module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers, changePasscode, verifyOldPasscode }
+const deleteUserByAdmin = async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (req.body.userRole !== 'admin') {
+      return res.status(401).json(response({ statusCode: '401', message: req.t('unauthorised'), status: "Error" }));
+    }
+    const user = await deleteUser(id);
+    if (!user) {
+      return res.status(404).json(response({ statusCode: '404', message: req.t('user-not-exists'), status: "Error" }));
+    }
+    await Transaction.deleteMany({ sender: id });
+    await Notification.deleteMany({ receiver: id });
+    return res.status(200).json(response({ statusCode: '200', message: req.t('user-deleted'), status: "OK" }));
+  }
+  catch (error) {
+    console.error(error);
+    logger.error(error, req.originalUrl)
+    return res.status(500).json(response({ statusCode: '500', message: req.t('server-error'), status: "Error" }));
+  }
+}
+
+module.exports = { signUp, signIn, forgetPassword, verifyForgetPasswordOTP, addWorker, getWorkers, getUsers, userDetails, resetPassword, addPasscode, verifyPasscode, blockUser, unBlockUser, changePassword, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers, changePasscode, verifyOldPasscode, deleteUserByAdmin }

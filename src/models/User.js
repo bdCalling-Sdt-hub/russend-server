@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema({
   passcode: { type: String, required: false, set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10)) },
   isBlocked: { type: Boolean, default: false },
   country: { type: String, required: false },
+  countryCode : { type: String, required: false },
+  countryISO: { type: String, required: false }
 }, { timestamps: true }, {
   toJSON: {
     transform(doc, ret) {

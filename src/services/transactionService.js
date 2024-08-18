@@ -1,5 +1,6 @@
 const generateCustomID = require('../helpers/generateCustomId');
 const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 
 const addTransaction = async (transactionBody, sender) => {
   try {
@@ -17,6 +18,19 @@ const transactionDetailsById = async (id) => {
   try {
     return await Transaction.findById(id).select("-hiddenFees").populate('sender', 'fullName image').populate('country', 'countryFlag');
 
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+const transactionDetailsByIdAndSender = async (id, senderId) => {
+  try {
+    const transaction = await Transaction.findOne({ _id: id, sender: senderId }).select("-hiddenFees").populate('sender', 'fullName image').populate('country', 'countryFlag');
+    if (!transaction) {
+      throw null;
+    }
+    return transaction;
   }
   catch (error) {
     throw error;
@@ -49,11 +63,13 @@ const updateTransactionById = async (transactionId, transactionbody) => {
 
 const transactionCounts = async () => {
   try {
-    const totalTransactions = await Transaction.countDocuments();
-    const approvedTransactions = await Transaction.countDocuments({ status: 'accepted' });
-    const pendingTransactions = await Transaction.countDocuments({ status: 'pending' });
-    const transferredTransactions = await Transaction.countDocuments({ status: 'transferred' });
-    return { totalTransactions, approvedTransactions, transferredTransactions, pendingTransactions };
+    const totalTransactions = await Transaction.countDocuments({userConfirmation: true});
+    const cancelledTransactions = await Transaction.countDocuments({ status: 'cancelled', userConfirmation: true });
+    const pendingTransactions = await Transaction.countDocuments({ status: 'pending', userConfirmation: true });
+    const transferredTransactions = await Transaction.countDocuments({ status: 'transferred', userConfirmation: true });
+    const userCounts = await User.countDocuments({role: 'user'});
+
+    return { totalTransactions, cancelledTransactions, transferredTransactions, pendingTransactions, userCounts };
   }
   catch (error) {
     throw error;
@@ -66,7 +82,7 @@ const transactionChart = async (year) => {
     const yearEndDate = new Date(year + 1, 0, 1);
     const allTransactions = await Transaction.find({
       createdAt: { $gte: yearStartDate, $lt: yearEndDate },
-      status: {$in:["accepted", "transferred"]}
+      status: { $in: ["accepted", "transferred"] }
     });
 
     const monthNames = [
@@ -110,5 +126,6 @@ module.exports = {
   updateTransactionById,
   allTransactions,
   transactionCounts,
-  transactionChart
+  transactionChart,
+  transactionDetailsByIdAndSender
 }

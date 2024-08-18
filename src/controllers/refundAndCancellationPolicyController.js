@@ -6,7 +6,7 @@ const { addRefundAndCancellationPolicy, getRefundAndCancellationPolicys } = requ
 const upgradeRefundAndCancellationPolicy = async (req, res) => {
   try{
     if(req.body.userRole!=='admin'){
-      res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'refundAndCancellationPolicy', message: req.t('unauthorised') }));
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'refundAndCancellationPolicy', message: req.t('unauthorised') }));
     }
     const refundAndCancellationPolicy = await addRefundAndCancellationPolicy(req.body);
     return res.status(201).json(response({ status: 'Success', statusCode: '201', type: 'refundAndCancellationPolicy', message: req.t('refundAndCancellationPolicy-added'), data: refundAndCancellationPolicy }));

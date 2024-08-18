@@ -3,7 +3,7 @@ const logger = require('../../helpers/logger');
 
 const validateTransaction = async (req, res, next) => {
   try {
-    const { firstName, lastName, phoneNumber, amountToSent, ammountToSentCurrency, amountToReceive, amountToReceiveCurrency, exchangeRate, hiddenFees, paymentMethod, country  } = req.body;
+    const { firstName, lastName, phoneNumber, amountToSent, ammountToSentCurrency, amountToReceive, amountToReceiveCurrency, hiddenFees, paymentMethod, country  } = req.body;
     let errors = [];
 
     if (!firstName) {
@@ -27,10 +27,7 @@ const validateTransaction = async (req, res, next) => {
     if (!amountToReceiveCurrency) {
       errors.push({ field: 'amountToReceiveCurrency', message: req.t('amountToReceiveCurrency-required') });
     }
-    if (Number(exchangeRate) < 0) {
-      errors.push({ field: 'exchangeRate', message: req.t('exchangeRate-format-error') });
-    }
-    if (Number(hiddenFees) < 0 || Number(hiddenFees) > 100) {
+    if (Number(hiddenFees) < -100 || Number(hiddenFees) > 100) {
       errors.push({ field: 'hiddenFees', message: req.t('hiddenFees-format-error') });
     }
     if (!paymentMethod) {
@@ -45,7 +42,6 @@ const validateTransaction = async (req, res, next) => {
     }
     req.body.amountToReceive = Number(amountToReceive);
     req.body.amountToSent = Number(amountToSent);
-    req.body.exchangeRate = Number(exchangeRate);
     req.body.hiddenFees = Number(hiddenFees);
     next(); // Continue to the next middleware or route handler
   }

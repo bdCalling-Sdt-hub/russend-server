@@ -17,8 +17,11 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const app = express();
 
-// Connect to the MongoDB database
-mongoose.connect(process.env.MONGODB_CONNECTION, {});
+const mongoURI = process.env.MONGODB_CONNECTION; // Replace with your actual environment variable name
+
+mongoose.connect(mongoURI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(error => console.error('Error connecting to MongoDB:', error));
 
 //making public folder static for publicly access
 app.use(express.static('public'));

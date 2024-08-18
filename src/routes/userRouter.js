@@ -1,5 +1,5 @@
 const express = require('express');
-const { signUp, signIn, addWorker, getUsers, getWorkers, userDetails, forgetPassword, verifyForgetPasswordOTP, resetPassword, addPasscode, verifyPasscode, changePassword, blockUser, unBlockUser, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers, changePasscode, verifyOldPasscode } = require('../controllers/userController');
+const { signUp, signIn, addWorker, getUsers, getWorkers, userDetails, forgetPassword, verifyForgetPasswordOTP, resetPassword, addPasscode, verifyPasscode, changePassword, blockUser, unBlockUser, signInWithPasscode, signInWithRefreshToken, updateProfile, getBlockedUsers, changePasscode, verifyOldPasscode, deleteUserByAdmin } = require('../controllers/userController');
 const router = express.Router();
 const fs = require('fs');
 const userFileUploadMiddleware = require("../middlewares/fileUpload");
@@ -41,5 +41,6 @@ router.get('/:id', isValidUser, userDetails);
 router.patch('/change-password', isValidUser, changePassword);
 router.patch('/change-passcode', isValidUser, changePasscode);
 router.put('/', [uploadUsers.single("image")], isValidUser, updateProfile);
+router.delete('/:id', isValidUser, deleteUserByAdmin);
 
 module.exports = router;

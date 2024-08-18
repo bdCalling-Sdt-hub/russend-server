@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const port = process.env.PORT || 3001;
 
-const server = app.listen(port, process.env.API_SERVER_IP,() => {
+const server = app.listen(port,() => {
   console.log(`Russend Server is listening on port: ${port}`)
 });
 
@@ -23,7 +23,3 @@ const io = socketIo(server, {cors: {
 socketIO(io);
 
 global.io = io
-const socketIOPort = process.env.PORT
-server.listen(socketIOPort, process.env.API_SERVER_IP,() => {
-  console.log(`_Socket Server is listening on port: ${socketIOPort}`);
-});

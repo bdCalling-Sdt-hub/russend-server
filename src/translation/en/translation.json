@@ -83,5 +83,10 @@
   "notification-not-found": "Notification not found",
   "password-invalid": "Password is wrong, please try again with a valid one",
   "hiddenFee-added": "Hidden fee updated successfully",
-  "invalid-passcode": "Passcode is invalid, please try again with a valid one"
+  "invalid-passcode": "Passcode is invalid, please try again with a valid one",
+  "transaction-confirmed":"Transaction confirmed successfully",
+  "transaction-already-confirmed":"Transaction is already confirmed",
+  "transaction-cancelled":"Transaction is already cancelled by admin",
+  "user-deleted":"User deleted successfully",
+  "email-already-exists":"User with this email already exists"
 }

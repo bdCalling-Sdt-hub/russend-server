@@ -9,15 +9,15 @@ const HiddenFee = require('../models/HiddenFee');
 const usersData = [
   {
     "fullName": "Testing Admin",
-    "email": "ad.residplus@gmail.com",
-    "phoneNumber": "01735566789",
+    "email": "support@russend.com",
+    "phoneNumber": "123456789",
     "password": 'helloadmin',
     "role": "admin"
   },
   {
     "fullName": "Testing Worker",
-    "email": "sub.residplus@gmail.com",
-    "phoneNumber": "01933456040",
+    "email": "team.robust.dev@gmail.com",
+    "phoneNumber": "987654321",
     "password": 'helloworker',
     "role": "worker"
   },
@@ -64,8 +64,8 @@ const countryData = [
     "currency": "XAF",
     "countryFlag": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/flags/gabon.svg",
     "paymentGateways": [{
-      "name": "Orange Money",
-      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/orange_money.png",
+      "name": "Mobile Money CEMAC",
+      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/cemac.png",
     }],
     "isPaymentAvailable": true,
   },
@@ -75,19 +75,19 @@ const countryData = [
     "currency": "XAF",
     "countryFlag": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/flags/equatorial_guinea.svg",
     "paymentGateways": [{
-      "name": "Orange Money",
-      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/orange_money.png",
+      "name": "Mobile Money CEMAC",
+      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/cemac.png",
     }],
     "isPaymentAvailable": true,
   },
   {
     "name": "Repubilc of Congo",
-    "countryCode": "+243",
+    "countryCode": "+242",
     "currency": "XAF",
     "countryFlag": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/flags/congo.svg",
     "paymentGateways": [{
-      "name": "Orange Money",
-      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/orange_money.png",
+      "name": "Mobile Money CEMAC",
+      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/cemac.png",
     }],
     "isPaymentAvailable": true,
   },
@@ -97,8 +97,8 @@ const countryData = [
     "currency": "XAF",
     "countryFlag": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/flags/chad.svg",
     "paymentGateways": [{
-      "name": "Orange Money",
-      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/orange_money.png",
+      "name": "Mobile Money CEMAC",
+      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/cemac.png",
     }],
     "isPaymentAvailable": true,
   },
@@ -108,13 +108,13 @@ const countryData = [
     "currency": "XAF",
     "countryFlag": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/flags/central_african.svg",
     "paymentGateways": [{
-      "name": "Orange Money",
-      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/orange_money.png",
+      "name": "Mobile Money CEMAC",
+      "logo": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/gateways/cemac.png",
     }],
     "isPaymentAvailable": true,
   },
   {
-    "name": "Kaxakhatan",
+    "name": "Kazakhstan",
     "countryCode": "+7",
     "currency": "KZT",
     "countryFlag": process.env.IMAGE_UPLOAD_BACKEND_DOMAIN + "/uploads/flags/kazakhstan.svg",
@@ -167,7 +167,7 @@ const seedHiddenFee = async () => {
   }
 }
 
-const seedPaymentGateways = async () => {
+const seedCountries = async () => {
   try {
     await Country.deleteMany();
     await Country.insertMany(countryData);
@@ -195,9 +195,9 @@ const seedDatabase = async () => {
   try {
     await dropDatabase();
     await seedUsers();
-    await seedPaymentInfo();
+    await seedCountries();
     await seedHiddenFee();
-    await seedPaymentGateways();
+    await seedPaymentInfo();
     console.log('--------------> Database seeding completed <--------------');
   } catch (err) {
     console.error('Error seeding database:', err);

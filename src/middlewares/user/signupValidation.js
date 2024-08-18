@@ -20,7 +20,7 @@ const validationMiddleware = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (user) {
-      req.body.existingUser = user;
+      return res.status(409).json(response({ status: 'Error', statusCode: '409', type: "sign-up", message: req.t('email-already-exists') }));
     }
 
     if (!fullName) {
@@ -31,11 +31,11 @@ const validationMiddleware = async (req, res, next) => {
       errors.push({ field: 'phoneNumber', message: req.t('phoneNumber-required') });
     }
 
-    if (!validateEmail(email)) {
+    if (!email) {
       errors.push({ field: 'email', message: req.t('email-format-error') });
     }
 
-    if (!validatePassword(password)) {
+    if (!password) {
       errors.push({ field: 'password', message: req.t('password-format-error') });
     }
     

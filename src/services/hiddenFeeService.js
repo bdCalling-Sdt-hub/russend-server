@@ -1,6 +1,7 @@
 const HiddenFee = require('../models/HiddenFee');
 
 const addHiddenFee = async (hiddenFeeBody) => {
+  console.log(hiddenFeeBody);
   try {
     var hiddenFee = await findHiddenFee();
     if (hiddenFee) {

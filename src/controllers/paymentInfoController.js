@@ -6,7 +6,7 @@ const { addPaymentInfo, getPaymentInfo } = require('../services/paymentInfoServi
 const upgradePaymentInfo = async (req, res) => {
   try{
     if(req.body.userRole!=='admin'){
-      res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'paymentInfo', message: req.t('unauthorised') }));
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'paymentInfo', message: req.t('unauthorised') }));
     }
     const paymentInfo = await addPaymentInfo(req.body);
     return res.status(201).json(response({ status: 'Success', statusCode: '201', type: 'paymentInfo', message: req.t('paymentInfo-added'), data: paymentInfo }));

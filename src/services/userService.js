@@ -62,6 +62,15 @@ const loginWithPasscode = async (email, passcode) => {
   return user;
 }
 
+const deleteUser = async (userId) => {
+  try{
+    return await User.findByIdAndDelete(userId);
+  }
+  catch(error){
+    throw error;
+  }
+}
+
 module.exports = {
   addUser,
   login,
@@ -69,5 +78,6 @@ module.exports = {
   updateUser,
   getUserByEmail,
   getAllUsers,
-  loginWithPasscode
+  loginWithPasscode,
+  deleteUser
 }

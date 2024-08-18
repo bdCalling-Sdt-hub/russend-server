@@ -1,18 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { addTransactionController, getAllTransactions, getTransactionById, updateTransactionToSent, acceptTransaction, cancelTransaction, getTransactionChart, getTransactionCounts, getTransactionHistory, getAcceptedTransactionList } = require('../controllers/transactionController');
+const { addTransactionController, getAllTransactions, getTransactionById, updateTransactionToSent, cancelTransaction, getTransactionChart, getTransactionCounts, getTransactionHistory, confirmTransactionByUser } = require('../controllers/transactionController');
 const { isValidUser } = require('../middlewares/auth')
 const validateTransaction = require('../middlewares/transaction/transactionValidation');
 
 router.post('/', isValidUser, validateTransaction, addTransactionController);
 router.get('/chart', isValidUser, getTransactionChart);
 router.get('/counts', isValidUser, getTransactionCounts);
-router.get('/accepted-list', isValidUser, getAcceptedTransactionList);
 router.get('/history', isValidUser, getTransactionHistory);
 router.get('/:id', isValidUser, getTransactionById);
 router.get('/', isValidUser, getAllTransactions);
+router.patch('/confirm/:id', isValidUser, confirmTransactionByUser);
 router.patch('/transfer/:id', isValidUser, updateTransactionToSent);
-router.patch('/accept/:id', isValidUser, acceptTransaction);
 router.patch('/cancel/:id', isValidUser, cancelTransaction);
 
 module.exports = router;

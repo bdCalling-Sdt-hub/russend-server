@@ -6,7 +6,7 @@ const { addTermsOfService, getTermsOfServices } = require('../services/termsOfSe
 const upgradeTermsOfService = async (req, res) => {
   try{
     if(req.body.userRole!=='admin'){
-      res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'termsOfService', message: req.t('unauthorised') }));
+      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'termsOfService', message: req.t('unauthorised') }));
     }
     const termsOfService = await addTermsOfService(req.body);
     return res.status(201).json(response({ status: 'Success', statusCode: '201', type: 'termsOfService', message: req.t('termsOfService-added'), data: termsOfService }));

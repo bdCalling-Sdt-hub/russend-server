@@ -9,12 +9,13 @@ const transactionSchema = new mongoose.Schema({
   ammountToSentCurrency: { type: String, required: true, trim: true },
   amountToReceive: { type: Number, required: true, trim: true },
   amountToReceiveCurrency: { type: String, required: true, trim: true },
-  exchangeRate: { type: Number, required: true, trim: true },
+  exchangeRate: { type: String, required: true},
   hiddenFees: { type: Number, required: true, trim: true },
   paymentMethod: { type: String, required: true, trim: true },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   country: { type: mongoose.Schema.Types.ObjectId, ref: 'Country' },
-  status: { type: String, enum: ['accepted', 'pending', 'transferred', 'cancelled'], default: 'pending' },
+  userConfirmation: { type: Boolean, default: false },
+  status: { type: String, enum: ['accepted', 'pending', 'transferred', 'cancelled'], default: 'cancelled' },
 }, { timestamps: true }
 );
 
