@@ -1,15 +1,21 @@
-const OTP = require('../models/OTP');
-const emailWithNodemailer = require('../helpers/email');
-require('dotenv').config();
+const OTP = require("../models/OTP");
+const emailWithNodemailer = require("../helpers/email");
+require("dotenv").config();
 
 const sendOTP = async (name, sentTo, receiverType, purpose) => {
   try {
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    const subject = purpose === 'email-verification' ? 'Email verification code' : 'Forgot password code';
+    const subject =
+      purpose === "email-verification"
+        ? "Email verification code"
+        : "Forgot password code";
 
     //sending email if receiverType is email
-    if (receiverType === 'email') {
+
+    console.log("start");
+    if (receiverType === "email") {
+      console.log("inside");
       const emailData = {
         email: sentTo,
         subject: subject,
@@ -17,10 +23,12 @@ const sendOTP = async (name, sentTo, receiverType, purpose) => {
           <h1>Hello, ${name}</h1>
           <p>Your One Time Code is <h3>${otp}</h3> to verify your account</p>
           <small>This Code is valid for ${process.env.OTP_EXPIRY_TIME} minutes</small>
-        `
-      }
+        `,
+      };
       await emailWithNodemailer(emailData);
     }
+
+    console.log("outside");
 
     const otpExpiryTime = parseInt(process.env.OTP_EXPIRY_TIME) || 3;
     const expiredAt = new Date();
@@ -39,9 +47,9 @@ const sendOTP = async (name, sentTo, receiverType, purpose) => {
     setTimeout(async () => {
       try {
         await OTP.findByIdAndDelete(savedOtp._id);
-        console.log('OTP deleted successfully after expiry.');
+        console.log("OTP deleted successfully after expiry.");
       } catch (error) {
-        console.error('Error deleting OTP after expiry:', error);
+        console.error("Error deleting OTP after expiry:", error);
       }
     }, 180000);
 
@@ -49,37 +57,50 @@ const sendOTP = async (name, sentTo, receiverType, purpose) => {
   } catch (error) {
     throw error;
   }
-}
-
+};
 
 const checkOTPByEmail = async (sentTo) => {
   try {
-    return await OTP.findOne({ sentTo: sentTo, status: 'pending', expiredAt: { $gt: new Date() } })
-  }
-  catch (error) {
+    return await OTP.findOne({
+      sentTo: sentTo,
+      status: "pending",
+      expiredAt: { $gt: new Date() },
+    });
+  } catch (error) {
     throw error;
   }
-}
+};
 
 const verifyOTP = async (sentTo, receiverType, purpose, otp) => {
   try {
-    const otpData = await OTP.findOne({ sentTo, receiverType, purpose, otp, expiredAt: { $gt: new Date() }, status: { $eq: "pending" }, verifiedAt: { $eq: null } })
+    const otpData = await OTP.findOne({
+      sentTo,
+      receiverType,
+      purpose,
+      otp,
+      expiredAt: { $gt: new Date() },
+      status: { $eq: "pending" },
+      verifiedAt: { $eq: null },
+    });
     if (!otpData) {
       return null;
     }
-    otpData.status = 'expired';
+    otpData.status = "expired";
     otpData.verifiedAt = new Date();
     await otpData.save();
     return otpData;
-  }
-  catch (error) {
+  } catch (error) {
     throw error;
   }
-}
+};
 
 const checkOTPValidity = (sentTo) => {
-  return OTP.findOne({ sentTo: sentTo, expiredAt: { $gt: new Date() }, status: 'verified' })
-}
+  return OTP.findOne({
+    sentTo: sentTo,
+    expiredAt: { $gt: new Date() },
+    status: "verified",
+  });
+};
 
 const updateOTP = async (otpId, otpBody) => {
   try {
@@ -90,16 +111,15 @@ const updateOTP = async (otpId, otpBody) => {
     Object.assign(otpData, otpBody);
     await otpData.save();
     return true;
-  }
-  catch (error) {
+  } catch (error) {
     throw error;
   }
-}
+};
 
 module.exports = {
   sendOTP,
   checkOTPByEmail,
   verifyOTP,
   checkOTPValidity,
-  updateOTP
-}
+  updateOTP,
+};
