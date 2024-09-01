@@ -60,6 +60,19 @@ const allTransactions = async (filter, options) => {
   }
 };
 
+const transactionsAllHistory = async (filter) => {
+  try {
+    const transactionList = await Transaction.find({ ...filter })
+      .select("-hiddenFees")
+      .sort({ createdAt: -1 })
+      .populate("country", "countryFlag name")
+      .populate("sender", "fullName image email phoneNumber");
+    return { transactionList, pagination: {} };
+  } catch (error) {
+    throw error;
+  }
+};
+
 const updateTransactionById = async (transactionId, transactionbody) => {
   try {
     return await Transaction.findByIdAndUpdate(transactionId, transactionbody, {
@@ -222,5 +235,6 @@ module.exports = {
   transactionChart,
   transactionWeeklyChart,
   transactionHourChart,
+  transactionsAllHistory,
   transactionDetailsByIdAndSender,
 };

@@ -12,6 +12,7 @@ const {
   confirmTransactionByUser,
   getTransactionWeeklyChart,
   getTransactionHourChart,
+  getTransactionAllHistory,
 } = require("../controllers/transactionController");
 const { isValidUser } = require("../middlewares/auth");
 const validateTransaction = require("../middlewares/transaction/transactionValidation");
@@ -22,6 +23,7 @@ router.get("/chart/weekly", isValidUser, getTransactionWeeklyChart);
 router.get("/chart/hour", isValidUser, getTransactionHourChart);
 router.get("/counts", isValidUser, getTransactionCounts);
 router.get("/history", isValidUser, getTransactionHistory);
+router.get("/all/history", isValidUser, getTransactionAllHistory);
 router.get("/:id", isValidUser, getTransactionById);
 router.get("/", isValidUser, getAllTransactions);
 router.patch("/confirm/:id", isValidUser, confirmTransactionByUser);

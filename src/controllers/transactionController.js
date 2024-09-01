@@ -8,6 +8,7 @@ const {
   transactionDetailsByIdAndSender,
   transactionWeeklyChart,
   transactionHourChart,
+  transactionsAllHistory,
 } = require("../services/transactionService");
 const response = require("../helpers/response");
 const logger = require("../helpers/logger");
@@ -592,6 +593,55 @@ const getTransactionHistory = async (req, res) => {
   }
 };
 
+const getTransactionAllHistory = async (req, res) => {
+  try {
+    if (req.body.userRole === "user") {
+      return res.status(400).json(
+        response({
+          status: "Error",
+          statusCode: "400",
+          type: "Transaction",
+          message: req.t("unauthorised"),
+        })
+      );
+    }
+
+    const status = req.query.status;
+
+    var filter = {
+      status: { $ne: "pending" },
+    };
+
+    if (status != "all") {
+      filter.status = status;
+    }
+
+    const { transactionList, pagination } = await transactionsAllHistory(
+      filter
+    );
+    return res.status(200).json(
+      response({
+        status: "Success",
+        statusCode: "200",
+        type: "Transaction",
+        message: req.t("transaction-list"),
+        data: { transactionList, pagination },
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    logger.error(error.message, req.originalUrl);
+    return res.status(500).json(
+      response({
+        status: "Error",
+        statusCode: "500",
+        type: "Transaction",
+        message: req.t("server-error"),
+      })
+    );
+  }
+};
+
 module.exports = {
   addTransactionController,
   getAllTransactions,
@@ -603,5 +653,6 @@ module.exports = {
   getTransactionWeeklyChart,
   getTransactionHourChart,
   getTransactionHistory,
+  getTransactionAllHistory,
   confirmTransactionByUser,
 };
