@@ -192,10 +192,10 @@ const transactionWeeklyChart = async () => {
 };
 const transactionHourChart = async () => {
   try {
-    const hoursOfDay = Array.from({ length: 12 }, (_, i) => i + 1);
+    const hoursOfDay = Array.from({ length: 24 }, (_, i) => i + 1);
     const last12HoursData = [];
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 24; i++) {
       // Calculate the start and end of the hour
       const hourStart = new Date();
       hourStart.setMinutes(0, 0, 0);

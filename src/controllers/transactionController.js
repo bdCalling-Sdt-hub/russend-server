@@ -534,6 +534,10 @@ const getTransactionHistory = async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
 
+    const { startDate, endDate } = req.query;
+
+    console.log({ startDate }, { endDate });
+
     const options = {
       page,
       limit,
@@ -547,6 +551,13 @@ const getTransactionHistory = async (req, res) => {
 
     if (status != "all") {
       filter.status = status;
+    }
+
+    if (startDate && endDate) {
+      filter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
     }
 
     const search = req.query.search;
@@ -563,7 +574,7 @@ const getTransactionHistory = async (req, res) => {
       ];
     }
 
-    console.log({ status });
+    // console.log({ status });
     console.log(filter);
 
     const { transactionList, pagination } = await allTransactions(
@@ -606,7 +617,8 @@ const getTransactionAllHistory = async (req, res) => {
       );
     }
 
-    const status = req.query.status;
+    // const status = req.query.status;
+    const { status, startDate, endDate } = req.query;
 
     var filter = {
       status: { $ne: "pending" },
@@ -614,6 +626,13 @@ const getTransactionAllHistory = async (req, res) => {
 
     if (status != "all") {
       filter.status = status;
+    }
+
+    if (startDate && endDate) {
+      filter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
     }
 
     const { transactionList, pagination } = await transactionsAllHistory(
