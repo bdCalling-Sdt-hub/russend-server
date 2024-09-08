@@ -1,4 +1,4 @@
-const TermsOfMoneyTransfer = require('../models/TermsOfMoneyTransfer');
+const TermsOfMoneyTransfer = require('../models/termsOfMoneyTransfer');
 
 const addTermsOfMoneyTransfer = async (termsOfMoneyTransferBody) => {
   try {
