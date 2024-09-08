@@ -1,4 +1,4 @@
-const TermsOfService = require('../models/TermsOfService');
+const TermsOfService = require('../models/termsOfService');
 
 const addTermsOfService = async (termsOfServiceBody) => {
   try {
