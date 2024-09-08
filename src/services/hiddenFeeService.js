@@ -4,24 +4,27 @@ const addHiddenFee = async (hiddenFeeBody) => {
   console.log(hiddenFeeBody);
   try {
     var hiddenFee = await findHiddenFee();
+
     if (hiddenFee) {
       if (hiddenFeeBody?.isActive !== null) {
         hiddenFee.isActive = hiddenFeeBody.isActive;
       }
+
       if (hiddenFeeBody?.cameroonFee !== null) {
         hiddenFee.cameroonFee = hiddenFeeBody.cameroonFee;
       }
-      if (hiddenFeeBody?.otherCountriesFree !== null) {
-        hiddenFee.cameroo;
-        hiddenFee.otherCountriesFree = hiddenFeeBody.otherCountriesFree;
+
+      if (hiddenFeeBody?.percentage !== null) {
+        hiddenFee.cameroonFee;
+        hiddenFee.percentage = hiddenFeeBody.percentage;
       }
     } else {
       if (hiddenFeeBody?.isActive !== null) {
         hiddenFee.isActive = hiddenFeeBody.isActive;
       }
-      if (hiddenFeeBody?.otherCountriesFree !== null) {
-        hiddenFee.cameroo;
-        hiddenFee.otherCountriesFree = hiddenFeeBody.otherCountriesFree;
+      if (hiddenFeeBody?.percentage !== null) {
+        hiddenFee.cameroonFee;
+        hiddenFee.percentage = hiddenFeeBody.percentage;
       }
     }
     await hiddenFee.save();

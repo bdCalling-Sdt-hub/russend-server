@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const hiddedFeeSchema = new mongoose.Schema(
   {
     cameroonFee: { type: Number, default: 0 },
-    otherCountriesFree: { type: Number, default: 0 },
+    percentage: { type: Number, default: 0 },
     isActive: { type: Boolean, default: false },
   },
   { timestamps: true }
