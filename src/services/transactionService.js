@@ -141,6 +141,7 @@ const transactionChart = async (year) => {
     const monthlyCounts = monthNames.map((month, index) => ({
       name: month,
       amount: 0,
+      count: 0,
     }));
 
     allTransactions.forEach((transaction) => {
@@ -148,6 +149,7 @@ const transactionChart = async (year) => {
       const monthIndex = createdAt.getMonth();
       const monthCount = monthlyCounts[monthIndex];
       monthCount.amount += transaction.amountToSent;
+      monthCount.count += 1;
     });
 
     return monthlyCounts;
@@ -158,69 +160,96 @@ const transactionChart = async (year) => {
 
 const transactionWeeklyChart = async () => {
   try {
-    const daysOfWeek = ["Sun", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat"];
-    const last7DaysData = [];
+    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
 
-    for (let i = 0; i < 7; i++) {
-      // Calculate the start and end of the day
-      const dayStart = new Date();
-      dayStart.setHours(0, 0, 0, 0);
-      dayStart.setDate(dayStart.getDate() - i);
+    // Get current day index
+    const currentDayIndex = new Date().getDay(); // 0 for Sunday, 1 for Monday, etc.
 
-      const dayEnd = new Date(dayStart);
-      dayEnd.setDate(dayEnd.getDate() + 1);
+    // Create a new array with the current day first, followed by the previous 6 days
+    const last7DaysData = Array.from({ length: 7 }, (_, i) => {
+      const dayIndex = (currentDayIndex - i + 7) % 7;
+      return {
+        name: daysOfWeek[dayIndex],
+        amount: 0,
+        count: 0,
+      };
+    });
 
-      // Query to count the transactions for the day
-      const transactionCount = await Transaction.countDocuments({
-        createdAt: { $gte: dayStart, $lt: dayEnd },
-        status: { $in: ["accepted", "transferred"] },
-      });
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      // Add the result to the array
-      last7DaysData.push({
-        name: daysOfWeek[dayStart.getDay()],
-        amount: transactionCount,
-      });
-    }
+    const transactionData = await Transaction.find({
+      createdAt: {
+        $gte: sevenDaysAgo,
+      },
+    });
 
-    // Reverse the array to show the data in chronological order (Sunday to Saturday)
-    last7DaysData.reverse();
-    return last7DaysData;
+    transactionData.forEach((transaction) => {
+      const transactionDate = new Date(transaction.createdAt);
+      const dayOfWeek = transactionDate.getDay();
+
+      last7DaysData[dayOfWeek].amount += transaction.amountToSent;
+      last7DaysData[dayOfWeek].count += 1;
+    });
+
+    // console.log(last7DaysData);
+
+    // console.log("......start...............");
+    // console.log(transactionData);
+    // console.log("......end...............");
+
+    return last7DaysData.reverse();
   } catch (error) {
     throw error;
   }
 };
 const transactionHourChart = async () => {
   try {
-    const hoursOfDay = Array.from({ length: 24 }, (_, i) => i + 1);
-    const last12HoursData = [];
+    const currentHour = new Date().getHours(); // Get the current hour dynamically
+    const totalHours = 24;
 
-    for (let i = 0; i < 24; i++) {
-      // Calculate the start and end of the hour
-      const hourStart = new Date();
-      hourStart.setMinutes(0, 0, 0);
-      hourStart.setHours(hourStart.getHours() - i);
+    // Create an array starting from the current hour, decrementing to 1
+    const firstPart = Array.from({ length: currentHour }, (_, i) => ({
+      name: currentHour - i,
+      amount: 0,
+      count: 0, // Replace this with the actual amount logic
+    }));
 
-      const hourEnd = new Date(hourStart);
-      hourEnd.setHours(hourEnd.getHours() + 1);
+    // Create an array starting from 24, decrementing to the hour after the current hour
+    const secondPart = Array.from(
+      { length: totalHours - currentHour },
+      (_, i) => ({
+        name: totalHours - i,
+        amount: 0,
+        count: 0, // Replace this with the actual amount logic
+      })
+    );
 
-      // Query to count the transactions for the hour
-      const transactionCount = await Transaction.countDocuments({
-        createdAt: { $gte: hourStart, $lt: hourEnd },
-        status: { $in: ["accepted", "transferred"] },
-      });
+    const last24HoursData = [...firstPart, ...secondPart];
 
-      // Add the result to the array
-      last12HoursData.push({
-        name: hourStart.getHours(),
-        amount: transactionCount,
-      });
-    }
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Reverse the array to show the data in chronological order (oldest to newest)
-    last12HoursData.reverse();
+    // Fetch transactions from the last 24 hours
+    const transactionData = await Transaction.find({
+      createdAt: {
+        $gte: twentyFourHoursAgo,
+      },
+    });
 
-    return last12HoursData;
+    // Iterate through each transaction to update the hoursOfDay array
+    transactionData.forEach((transaction) => {
+      const transactionDate = new Date(transaction.createdAt);
+      const hourOfDay = transactionDate.getHours(); // Get the hour (0 to 23)
+
+      // Add the amountToSent to the corresponding hour in hoursOfDay
+      last24HoursData[hourOfDay].amount += transaction.amountToSent;
+      last24HoursData[hourOfDay].count += 1;
+    });
+
+    // console.log(last24HoursData);
+
+    return last24HoursData.reverse();
   } catch (error) {
     throw error;
   }
