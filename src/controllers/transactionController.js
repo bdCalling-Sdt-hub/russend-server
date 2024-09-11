@@ -553,7 +553,7 @@ const getTransactionHistory = async (req, res) => {
       filter.status = status;
     }
 
-    if (startDate && endDate) {
+    if (startDate && startDate!=='Invalid Date' && endDate && endDate!== 'Invalid Date') {
       filter.createdAt = {
         $gte: startDate,
         $lte: endDate,
