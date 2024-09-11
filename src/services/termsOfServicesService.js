@@ -1,12 +1,11 @@
-const TermsOfService = require('../models/TermsOfService');
+const TermsOfService = require("../models/TermsOfService");
 
 const addTermsOfService = async (termsOfServiceBody) => {
   try {
     var termsOfService = await findTermsOfService();
     if (termsOfService) {
       termsOfService.content = termsOfServiceBody.content;
-    }
-    else {
+    } else {
       termsOfService = new TermsOfService(termsOfServiceBody);
     }
     await termsOfService.save();
@@ -14,7 +13,7 @@ const addTermsOfService = async (termsOfServiceBody) => {
   } catch (error) {
     throw error;
   }
-}
+};
 
 const findTermsOfService = async () => {
   try {
@@ -23,18 +22,17 @@ const findTermsOfService = async () => {
   } catch (error) {
     throw error;
   }
-}
+};
 
 const getTermsOfServices = async () => {
   try {
-    return await TermsOfService.findOne().select('content');
-  }
-  catch (error) {
+    return await TermsOfService.findOne().select("content");
+  } catch (error) {
     throw error;
   }
-}
+};
 
 module.exports = {
   addTermsOfService,
-  getTermsOfServices
-}
+  getTermsOfServices,
+};

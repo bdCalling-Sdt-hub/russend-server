@@ -138,6 +138,8 @@ const transactionChart = async (year) => {
       "Dec",
     ];
 
+    // console.log(allTransactions);
+
     const monthlyCounts = monthNames.map((month, index) => ({
       name: month,
       amount: 0,
@@ -162,14 +164,12 @@ const transactionWeeklyChart = async () => {
   try {
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
 
-    // Get current day index
-    const currentDayIndex = new Date().getDay(); // 0 for Sunday, 1 for Monday, etc.
+    const currentDayIndex = new Date().getDay();
 
-    // Create a new array with the current day first, followed by the previous 6 days
     const last7DaysData = Array.from({ length: 7 }, (_, i) => {
       const dayIndex = (currentDayIndex - i + 7) % 7;
       return {
-        name: daysOfWeek[dayIndex],
+        name: daysOfWeek[i],
         amount: 0,
         count: 0,
       };
@@ -182,6 +182,7 @@ const transactionWeeklyChart = async () => {
       createdAt: {
         $gte: sevenDaysAgo,
       },
+      status: { $in: ["accepted", "transferred"] },
     });
 
     transactionData.forEach((transaction) => {
@@ -192,40 +193,30 @@ const transactionWeeklyChart = async () => {
       last7DaysData[dayOfWeek].count += 1;
     });
 
-    // console.log(last7DaysData);
+    let last7DaysDataSorting = [];
 
-    // console.log("......start...............");
-    // console.log(transactionData);
-    // console.log("......end...............");
+    last7DaysData.forEach((day, i) => {
+      const dayIndex = (currentDayIndex - i + 7) % 7;
 
-    return last7DaysData.reverse();
+      last7DaysDataSorting.push(last7DaysData[dayIndex]);
+    });
+
+    return last7DaysDataSorting.reverse();
   } catch (error) {
     throw error;
   }
 };
 const transactionHourChart = async () => {
   try {
-    const currentHour = new Date().getHours(); // Get the current hour dynamically
-    const totalHours = 24;
+    const currentHour = new Date().getHours();
 
-    // Create an array starting from the current hour, decrementing to 1
-    const firstPart = Array.from({ length: currentHour }, (_, i) => ({
-      name: currentHour - i,
+    const last24HoursData = Array.from({ length: 24 }, (_, i) => ({
+      name: i,
       amount: 0,
-      count: 0, // Replace this with the actual amount logic
+      count: 0,
     }));
 
-    // Create an array starting from 24, decrementing to the hour after the current hour
-    const secondPart = Array.from(
-      { length: totalHours - currentHour },
-      (_, i) => ({
-        name: totalHours - i,
-        amount: 0,
-        count: 0, // Replace this with the actual amount logic
-      })
-    );
-
-    const last24HoursData = [...firstPart, ...secondPart];
+    // console.log(last24HoursData);
 
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -235,21 +226,33 @@ const transactionHourChart = async () => {
       createdAt: {
         $gte: twentyFourHoursAgo,
       },
+      status: { $in: ["accepted", "transferred"] },
     });
 
     // Iterate through each transaction to update the hoursOfDay array
     transactionData.forEach((transaction) => {
       const transactionDate = new Date(transaction.createdAt);
       const hourOfDay = transactionDate.getHours(); // Get the hour (0 to 23)
-
-      // Add the amountToSent to the corresponding hour in hoursOfDay
+      // console.log(transaction);
+      // console.log(hourOfDay);
       last24HoursData[hourOfDay].amount += transaction.amountToSent;
       last24HoursData[hourOfDay].count += 1;
     });
 
-    // console.log(last24HoursData);
+    let last24HoursDataSorting = [];
 
-    return last24HoursData.reverse();
+    last24HoursData.forEach((hour, i) => {
+      const hourIndex = (currentHour - i + 24) % 24;
+
+      // console.log(hourIndex);
+
+      last24HoursDataSorting.push(last24HoursData[hourIndex]);
+
+      // last7DaysDataSorting.push(last24HoursData[dayIndex]);
+    });
+
+    // console.log(transactionData);
+    return last24HoursDataSorting.reverse();
   } catch (error) {
     throw error;
   }

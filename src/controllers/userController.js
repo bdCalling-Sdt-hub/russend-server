@@ -190,6 +190,11 @@ const signIn = async (req, res) => {
           process.env.JWT_ACCESS_TOKEN,
           { expiresIn: "1d" }
         );
+
+        console.log(
+          "process.env.JWT_REFRESH_TOKEN",
+          process.env.JWT_REFRESH_TOKEN
+        );
         refreshToken = jwt.sign(
           { _id: user._id, email: user.email, role: user.role },
           process.env.JWT_REFRESH_TOKEN,
