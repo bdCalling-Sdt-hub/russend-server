@@ -86,7 +86,7 @@ app.use("/api/countries", countryRouter);
 
 //testing API is alive
 app.get("/test", (req, res) => {
-  res.send(req.t("Back-end is responding!!"));
+  res.send(req.t("Russend Back-end is responding!!"));
 });
 
 //invalid route handler
