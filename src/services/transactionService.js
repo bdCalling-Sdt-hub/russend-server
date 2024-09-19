@@ -207,55 +207,164 @@ const transactionChart = async (year) => {
   }
 };
 
+// const transactionWeeklyChart = async () => {
+//   try {
+//     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
+
+//     const currentDayIndex = new Date().getDay();
+
+//     const last7DaysData = Array.from({ length: 7 }, (_, i) => {
+//       const dayIndex = (currentDayIndex - i + 7) % 7;
+//       return {
+//         name: daysOfWeek[i],
+//         amount: 0,
+//         count: 0,
+//       };
+//     });
+
+//     const sevenDaysAgo = new Date();
+//     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+//     const transactionData = await Transaction.find({
+//       createdAt: {
+//         $gte: sevenDaysAgo,
+//       },
+//       status: { $in: ["accepted", "transferred"] },
+//     });
+
+//     transactionData.forEach((transaction) => {
+//       const transactionDate = new Date(transaction.createdAt);
+//       const dayOfWeek = transactionDate.getDay();
+
+//       last7DaysData[dayOfWeek].amount += transaction.amountToSent;
+//       last7DaysData[dayOfWeek].count += 1;
+//     });
+
+//     let last7DaysDataSorting = [];
+
+//     last7DaysData.forEach((day, i) => {
+//       const dayIndex = (currentDayIndex - i + 7) % 7;
+
+//       last7DaysDataSorting.push(last7DaysData[dayIndex]);
+//     });
+
+//     return last7DaysDataSorting.reverse();
+//   } catch (error) {
+//     throw error;
+//   }
+// };
+
 const transactionWeeklyChart = async () => {
   try {
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
+    // Days of the week, starting from Sunday
+    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    const currentDayIndex = new Date().getDay();
+    // Get current UTC day index
+    const currentDayIndex = new Date().getUTCDay(); // Use UTC day index
 
+    // Initialize data for the last 7 days
     const last7DaysData = Array.from({ length: 7 }, (_, i) => {
-      const dayIndex = (currentDayIndex - i + 7) % 7;
+      const dayIndex = (currentDayIndex - i + 7) % 7; // Get correct day index for past 7 days
       return {
-        name: daysOfWeek[i],
+        dayIndex, // Return UTC day index instead of name
         amount: 0,
         count: 0,
       };
     });
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Get the date 7 days ago (UTC)
+    const sevenDaysAgoUTC = new Date();
+    sevenDaysAgoUTC.setUTCDate(sevenDaysAgoUTC.getUTCDate() - 7);
 
+    // Fetch transactions for the last 7 days (in UTC)
     const transactionData = await Transaction.find({
       createdAt: {
-        $gte: sevenDaysAgo,
+        $gte: sevenDaysAgoUTC,
       },
       status: { $in: ["accepted", "transferred"] },
     });
 
+    console.log(last7DaysData);
+    console.log(transactionData);
+
+    // Iterate through each transaction and aggregate data by day
     transactionData.forEach((transaction) => {
       const transactionDate = new Date(transaction.createdAt);
-      const dayOfWeek = transactionDate.getDay();
+      console.log({ transactionDate });
+      const dayOfWeekUTC = transactionDate.getUTCDay(); // Get the UTC day of the transaction
+      console.log({ dayOfWeekUTC });
 
-      last7DaysData[dayOfWeek].amount += transaction.amountToSent;
-      last7DaysData[dayOfWeek].count += 1;
+      // Add transaction amount and increment count for the correct day
+
+      const dayFind = last7DaysData.find(
+        (item) => item.dayIndex === dayOfWeekUTC
+      );
+      dayFind.amount += transaction.amountToSent;
+      dayFind.count += 1;
     });
 
-    let last7DaysDataSorting = [];
-
-    last7DaysData.forEach((day, i) => {
-      const dayIndex = (currentDayIndex - i + 7) % 7;
-
-      last7DaysDataSorting.push(last7DaysData[dayIndex]);
-    });
-
-    return last7DaysDataSorting.reverse();
+    // Return the data with UTC day indexes
+    return last7DaysData;
   } catch (error) {
     throw error;
   }
 };
+
+// const transactionHourChart = async () => {
+//   try {
+//     const currentHour = new Date().getHours();
+
+//     const last24HoursData = Array.from({ length: 24 }, (_, i) => ({
+//       name: i,
+//       amount: 0,
+//       count: 0,
+//     }));
+
+//     // console.log(last24HoursData);
+
+//     const twentyFourHoursAgo = new Date();
+//     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+//     // Fetch transactions from the last 24 hours
+//     const transactionData = await Transaction.find({
+//       createdAt: {
+//         $gte: twentyFourHoursAgo,
+//       },
+//       status: { $in: ["accepted", "transferred"] },
+//     });
+
+//     // Iterate through each transaction to update the hoursOfDay array
+//     transactionData.forEach((transaction) => {
+//       const transactionDate = new Date(transaction.createdAt);
+//       const hourOfDay = transactionDate.getHours(); // Get the hour (0 to 23)
+//       // console.log(transaction);
+//       // console.log(hourOfDay);
+//       last24HoursData[hourOfDay].amount += transaction.amountToSent;
+//       last24HoursData[hourOfDay].count += 1;
+//     });
+
+//     let last24HoursDataSorting = [];
+
+//     last24HoursData.forEach((hour, i) => {
+//       const hourIndex = (currentHour - i + 24) % 24;
+
+//       // console.log(hourIndex);
+
+//       last24HoursDataSorting.push(last24HoursData[hourIndex]);
+
+//       // last7DaysDataSorting.push(last24HoursData[dayIndex]);
+//     });
+
+//     // console.log(transactionData);
+//     return last24HoursDataSorting.reverse();
+//   } catch (error) {
+//     throw error;
+//   }
+// };
+
 const transactionHourChart = async () => {
   try {
-    const currentHour = new Date().getHours();
+    const currentHourUTC = new Date().getUTCHours(); // Use UTC hours
 
     const last24HoursData = Array.from({ length: 24 }, (_, i) => ({
       name: i,
@@ -263,12 +372,10 @@ const transactionHourChart = async () => {
       count: 0,
     }));
 
-    // console.log(last24HoursData);
-
     const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    twentyFourHoursAgo.setUTCHours(twentyFourHoursAgo.getUTCHours() - 24); // Subtract 24 hours in UTC
 
-    // Fetch transactions from the last 24 hours
+    // Fetch transactions from the last 24 hours in UTC
     const transactionData = await Transaction.find({
       createdAt: {
         $gte: twentyFourHoursAgo,
@@ -276,29 +383,23 @@ const transactionHourChart = async () => {
       status: { $in: ["accepted", "transferred"] },
     });
 
-    // Iterate through each transaction to update the hoursOfDay array
+    // Iterate through each transaction to update the last24HoursData array
     transactionData.forEach((transaction) => {
       const transactionDate = new Date(transaction.createdAt);
-      const hourOfDay = transactionDate.getHours(); // Get the hour (0 to 23)
-      // console.log(transaction);
-      // console.log(hourOfDay);
-      last24HoursData[hourOfDay].amount += transaction.amountToSent;
-      last24HoursData[hourOfDay].count += 1;
+      const hourOfDayUTC = transactionDate.getUTCHours(); // Get the UTC hour (0 to 23)
+      last24HoursData[hourOfDayUTC].amount += transaction.amountToSent;
+      last24HoursData[hourOfDayUTC].count += 1;
     });
 
+    // Sort the last 24 hours data based on the current hour in UTC
     let last24HoursDataSorting = [];
 
     last24HoursData.forEach((hour, i) => {
-      const hourIndex = (currentHour - i + 24) % 24;
-
-      // console.log(hourIndex);
-
+      const hourIndex = (currentHourUTC - i + 24) % 24; // Adjust for 24-hour format
       last24HoursDataSorting.push(last24HoursData[hourIndex]);
-
-      // last7DaysDataSorting.push(last24HoursData[dayIndex]);
     });
 
-    // console.log(transactionData);
+    // Reverse the sorted data to have it from most recent to oldest
     return last24HoursDataSorting.reverse();
   } catch (error) {
     throw error;
