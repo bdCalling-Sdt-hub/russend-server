@@ -67,7 +67,54 @@ const transactionsAllHistory = async (filter) => {
       .sort({ createdAt: -1 })
       .populate("country", "countryFlag name")
       .populate("sender", "fullName image email phoneNumber");
-    return { transactionList, pagination: {} };
+
+    console.log(transactionList);
+    return transactionList;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const transactionsAllHistoryCancelled = async (filter) => {
+  console.log(filter);
+  try {
+    // Step 1: Find all phoneNumbers with a status of "transferred"
+    const transferredTransactions = await Transaction.find({
+      status: "transferred",
+    }).populate("sender");
+
+    // Step 2: Get the list of phoneNumbers that have transactions with status "transferred"
+    const transferredPhoneNumbers = transferredTransactions.map(
+      (transaction) => transaction.sender.phoneNumber
+    );
+
+    console.log("transferredPhoneNumbers");
+    console.log(transferredPhoneNumbers);
+
+    // Step 3: Find transactions with status "cancelled" where phoneNumber is not in the transferredPhoneNumbers list
+    const cancelledTransactions = await Transaction.find({
+      ...filter,
+    })
+      .populate("sender") // Populate the "sender" field (ref: "User")
+      .exec();
+
+    console.log("cancelledTransactions");
+    console.log(cancelledTransactions);
+    // Step 2: Filter out transactions where sender.phoneNumber is in transferredPhoneNumbers
+    const filteredCancelledTransactions = cancelledTransactions.filter(
+      (transaction) => {
+        // Ensure sender exists and check if sender's phoneNumber is not in transferredPhoneNumbers
+
+        console.log(transaction.sender.phoneNumber);
+        return (
+          transaction.sender &&
+          !transferredPhoneNumbers.includes(transaction.sender.phoneNumber)
+        );
+      }
+    );
+
+    console.log(filteredCancelledTransactions);
+    return filteredCancelledTransactions;
   } catch (error) {
     throw error;
   }
@@ -268,5 +315,6 @@ module.exports = {
   transactionWeeklyChart,
   transactionHourChart,
   transactionsAllHistory,
+  transactionsAllHistoryCancelled,
   transactionDetailsByIdAndSender,
 };

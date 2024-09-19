@@ -59,7 +59,7 @@ const signUp = async (req, res) => {
     }
     if (!otp) {
       const existingOTP = await checkOTPByEmail(email);
-      if (n) {
+      if (existingOTP) {
         console.log("OTP already exists", existingOTP);
         return res.status(200).json(
           response({

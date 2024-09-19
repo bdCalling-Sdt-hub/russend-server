@@ -9,6 +9,7 @@ const {
   transactionWeeklyChart,
   transactionHourChart,
   transactionsAllHistory,
+  transactionsAllHistoryCancelled,
 } = require("../services/transactionService");
 const response = require("../helpers/response");
 const logger = require("../helpers/logger");
@@ -553,10 +554,15 @@ const getTransactionHistory = async (req, res) => {
       filter.status = status;
     }
 
-    if (startDate && startDate!=='Invalid Date' && endDate && endDate!== 'Invalid Date') {
+    if (
+      startDate &&
+      startDate !== "Invalid Date" &&
+      endDate &&
+      endDate !== "Invalid Date"
+    ) {
       filter.createdAt = {
-        $gte: startDate,
-        $lte: endDate,
+        $gte: new Date(`${startDate}T00:00:00.000Z`),
+        $lte: new Date(`${endDate}T23:59:59.999Z`),
       };
     }
 
@@ -630,21 +636,25 @@ const getTransactionAllHistory = async (req, res) => {
 
     if (startDate && endDate) {
       filter.createdAt = {
-        $gte: startDate,
-        $lte: endDate,
+        $gte: new Date(`${startDate}T00:00:00.000Z`),
+        $lte: new Date(`${endDate}T23:59:59.999Z`),
       };
     }
 
-    const { transactionList, pagination } = await transactionsAllHistory(
-      filter
-    );
+    let transactionList;
+    if (status === "cancelled") {
+      transactionList = await transactionsAllHistoryCancelled(filter);
+    } else {
+      transactionList = await transactionsAllHistory(filter);
+    }
+
     return res.status(200).json(
       response({
         status: "Success",
         statusCode: "200",
         type: "Transaction",
         message: req.t("transaction-list"),
-        data: { transactionList, pagination },
+        data: { transactionList },
       })
     );
   } catch (error) {
