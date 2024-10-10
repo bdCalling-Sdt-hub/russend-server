@@ -1,33 +1,80 @@
-require('dotenv').config();
+require("dotenv").config();
 const response = require("../helpers/response");
 const logger = require("../helpers/logger");
-const { addPaymentInfo, getPaymentInfo } = require('../services/paymentInfoService');
+const {
+  addPaymentInfo,
+  getPaymentInfo,
+} = require("../services/paymentInfoService");
+const paymnetInfoHistoryService = require("../services/PaymentInfoHistoryService");
 
 const upgradePaymentInfo = async (req, res) => {
-  try{
-    if(req.body.userRole!=='admin'){
-      return res.status(400).json(response({ status: 'Error', statusCode: '400', type: 'paymentInfo', message: req.t('unauthorised') }));
+  try {
+    // console.log(req.body);
+    if (!(req.body.userRole === "admin" || req.body.userRole === "worker")) {
+      return res.status(400).json(
+        response({
+          status: "Error",
+          statusCode: "400",
+          type: "paymentInfo",
+          message: req.t("unauthorised"),
+        })
+      );
     }
+
+    // console.log("after");
+
+    // console.log(req.body);
     const paymentInfo = await addPaymentInfo(req.body);
-    return res.status(201).json(response({ status: 'Success', statusCode: '201', type: 'paymentInfo', message: req.t('paymentInfo-added'), data: paymentInfo }));
-  }
-  catch(error){
+
+    process.nextTick(async () => {
+      await paymnetInfoHistoryService.addPaymentInfoHistory(req.body);
+    });
+    return res.status(201).json(
+      response({
+        status: "Success",
+        statusCode: "201",
+        type: "paymentInfo",
+        message: req.t("paymentInfo-added"),
+        data: paymentInfo,
+      })
+    );
+  } catch (error) {
     console.error(error);
     logger.error(error.message, req.originalUrl);
-    return res.status(500).json(response({ status: 'Error', statusCode: '500', type: 'paymentInfo', message: req.t('server-error') }));
+    return res.status(500).json(
+      response({
+        status: "Error",
+        statusCode: "500",
+        type: "paymentInfo",
+        message: req.t("server-error"),
+      })
+    );
   }
-}
+};
 
 const getAllPaymentInfo = async (req, res) => {
-  try{
+  try {
     const paymentInfos = await getPaymentInfo();
-    return res.status(200).json(response({ status: 'Success', statusCode: '200', message: req.t('paymentInfos'), data: paymentInfos }));
-  }
-  catch(error){
+    return res.status(200).json(
+      response({
+        status: "Success",
+        statusCode: "200",
+        message: req.t("paymentInfos"),
+        data: paymentInfos,
+      })
+    );
+  } catch (error) {
     console.error(error);
     logger.error(error.message, req.originalUrl);
-    return res.status(500).json(response({ status: 'Error', statusCode: '500', type: 'paymentInfo', message: req.t('server-error') }));
+    return res.status(500).json(
+      response({
+        status: "Error",
+        statusCode: "500",
+        type: "paymentInfo",
+        message: req.t("server-error"),
+      })
+    );
   }
-}
+};
 
-module.exports = { upgradePaymentInfo, getAllPaymentInfo }
+module.exports = { upgradePaymentInfo, getAllPaymentInfo };

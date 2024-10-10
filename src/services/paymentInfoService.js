@@ -1,4 +1,4 @@
-const PaymentInfo = require('../models/PaymentInfo');
+const PaymentInfo = require("../models/PaymentInfo");
 
 const addPaymentInfo = async (paymentInfoBody) => {
   try {
@@ -7,8 +7,7 @@ const addPaymentInfo = async (paymentInfoBody) => {
       paymentInfo.name = paymentInfoBody.name;
       paymentInfo.bankName = paymentInfoBody.bankName;
       paymentInfo.phoneNumber = paymentInfoBody.phoneNumber;
-    }
-    else {
+    } else {
       paymentInfo = new PaymentInfo(paymentInfoBody);
     }
     await paymentInfo.save();
@@ -16,7 +15,7 @@ const addPaymentInfo = async (paymentInfoBody) => {
   } catch (error) {
     throw error;
   }
-}
+};
 
 const findPaymentInfo = async () => {
   try {
@@ -25,18 +24,17 @@ const findPaymentInfo = async () => {
   } catch (error) {
     throw error;
   }
-}
+};
 
 const getPaymentInfo = async () => {
   try {
     return await PaymentInfo.findOne();
-  }
-  catch (error) {
+  } catch (error) {
     throw error;
   }
-}
+};
 
 module.exports = {
   addPaymentInfo,
-  getPaymentInfo
-}
+  getPaymentInfo,
+};
